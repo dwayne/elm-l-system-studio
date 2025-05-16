@@ -1,6 +1,54 @@
 {
   "lockfile_version": "1",
   "packages": {
+    "caddy@latest": {
+      "last_modified": "2025-05-06T08:06:31Z",
+      "resolved": "github:NixOS/nixpkgs/1cb1c02a6b1b7cf67e3d7731cbbf327a53da9679#caddy",
+      "source": "devbox-search",
+      "version": "2.10.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/vqnzmj63b1239bpg9080qpni9py7ip8b-caddy-2.10.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/vqnzmj63b1239bpg9080qpni9py7ip8b-caddy-2.10.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9l9s537klz21mzwi6x7adkgixzslx65i-caddy-2.10.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9l9s537klz21mzwi6x7adkgixzslx65i-caddy-2.10.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/i5xxhgpzilig094varx7l5wz0njhywn0-caddy-2.10.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/i5xxhgpzilig094varx7l5wz0njhywn0-caddy-2.10.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/9475yx4m2bvabrjjxalnljvq145194wm-caddy-2.10.0",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/9475yx4m2bvabrjjxalnljvq145194wm-caddy-2.10.0"
+        }
+      }
+    },
     "elmPackages.elm-format@latest": {
       "last_modified": "2025-05-06T08:06:31Z",
       "resolved": "github:NixOS/nixpkgs/1cb1c02a6b1b7cf67e3d7731cbbf327a53da9679#elmPackages.elm-format",
