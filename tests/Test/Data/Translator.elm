@@ -76,6 +76,26 @@ suite =
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( cos alpha, sin alpha ) ]
+        , test "Example 7" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | turningAngle = Angle.fromDegrees 45 }
+                in
+                Sequence.fromString "----|F"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( 1, 0 ) ]
+        , test "Example 8" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
+                in
+                Sequence.fromString "[+]F"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( 1, 0 ) ]
         ]
 
 

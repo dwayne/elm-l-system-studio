@@ -91,6 +91,33 @@ translateMeaning settings meaning state =
             , { state | turtle = turtle }
             )
 
+        ReverseDirection ->
+            let
+                angle =
+                    Angle.fromDegrees -180
+
+                turtle =
+                    Turtle.turn angle state.turtle
+            in
+            ( Nothing
+            , { state | turtle = turtle }
+            )
+
+        Push ->
+            ( Nothing
+            , { state | stack = state.turtle :: state.stack }
+            )
+
+        Pop ->
+            ( Nothing
+            , case state.stack of
+                [] ->
+                    state
+
+                turtle :: restStack ->
+                    { state | turtle = turtle, stack = restStack }
+            )
+
         SwapPlusMinus ->
             ( Nothing
             , { state | swapPlusMinus = not state.swapPlusMinus }
