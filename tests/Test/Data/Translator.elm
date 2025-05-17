@@ -110,12 +110,25 @@ suite =
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngleIncrement = Angle.fromDegrees 45 }
+                        { defaultSettings
+                            | turningAngle = Angle.fromDegrees 90
+                            , turningAngleIncrement = Angle.fromDegrees 45
+                        }
                 in
                 Sequence.fromString "))))))()()+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+        , test "Example 11" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | lineLengthScaleFactor = 5 }
+                in
+                Sequence.fromString ">ff<f"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 5, 0 ), MoveTo ( 10, 0 ), MoveTo ( 11, 0 ) ]
         ]
 
 

@@ -47,7 +47,7 @@ translateMeaning settings meaning state =
         Move ->
             let
                 turtle =
-                    Turtle.walk settings.lineLength state.turtle
+                    Turtle.walk state.lineLength state.turtle
             in
             ( Just <| LineTo { position = turtle.position, lineWidth = state.lineWidth }
             , { state | turtle = turtle }
@@ -56,7 +56,7 @@ translateMeaning settings meaning state =
         MoveWithoutDrawing ->
             let
                 turtle =
-                    Turtle.walk settings.lineLength state.turtle
+                    Turtle.walk state.lineLength state.turtle
             in
             ( Just <| MoveTo turtle.position
             , { state | turtle = turtle }
@@ -66,10 +66,10 @@ translateMeaning settings meaning state =
             let
                 angle =
                     if state.swapPlusMinus then
-                        settings.turningAngle
+                        state.turningAngle
 
                     else
-                        Angle.negate settings.turningAngle
+                        Angle.negate state.turningAngle
 
                 turtle =
                     Turtle.turn angle state.turtle
@@ -82,10 +82,10 @@ translateMeaning settings meaning state =
             let
                 angle =
                     if state.swapPlusMinus then
-                        Angle.negate settings.turningAngle
+                        Angle.negate state.turningAngle
 
                     else
-                        settings.turningAngle
+                        state.turningAngle
 
                 turtle =
                     Turtle.turn angle state.turtle
@@ -131,6 +131,23 @@ translateMeaning settings meaning state =
             , { state | lineWidth = state.lineWidth - settings.lineWidthIncrement }
             )
 
+        MultiplyLineLength ->
+            ( Nothing
+            , { state | lineLength = state.lineLength * settings.lineLengthScaleFactor }
+            )
+
+        DivideLineLength ->
+            ( Nothing
+            , { state
+                | lineLength =
+                    if settings.lineLengthScaleFactor == 0 then
+                        0
+
+                    else
+                        state.lineLength / settings.lineLengthScaleFactor
+              }
+            )
+
         SwapPlusMinus ->
             ( Nothing
             , { state | swapPlusMinus = not state.swapPlusMinus }
@@ -157,6 +174,7 @@ translateMeaning settings meaning state =
 type alias State =
     { turtle : Turtle
     , stack : List Turtle
+    , lineLength : Float
     , lineWidth : Float
     , turningAngle : Angle
     , swapPlusMinus : Bool
@@ -167,6 +185,7 @@ initState : Settings -> State
 initState settings =
     { turtle = Turtle.new settings.startPosition settings.startHeading
     , stack = []
+    , lineLength = settings.lineLength
     , lineWidth = settings.lineWidth
     , turningAngle = settings.turningAngle
     , swapPlusMinus = False
