@@ -1,4 +1,4 @@
-module Data.Turtle exposing (Turtle, turn, walk)
+module Data.Turtle exposing (Turtle, new, turn, walk)
 
 import Data.Angle as Angle exposing (Angle)
 import Data.Position as Position exposing (Position)
@@ -10,11 +10,9 @@ type alias Turtle =
     }
 
 
-new : Position -> Turtle
-new position =
-    { position = position
-    , heading = Angle.zero
-    }
+new : Position -> Angle -> Turtle
+new =
+    Turtle
 
 
 turn : Angle -> Turtle -> Turtle

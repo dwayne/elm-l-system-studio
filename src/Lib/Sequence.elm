@@ -2,9 +2,11 @@ module Lib.Sequence exposing
     ( Sequence
     , concat
     , concatMap
+    , cons
     , empty
     , fromString
     , length
+    , mapWithState
     , singleton
     , toList
     , uncons
@@ -29,6 +31,11 @@ empty =
 singleton : a -> Sequence a
 singleton x =
     Cons x Empty
+
+
+cons : a -> Sequence a -> Sequence a
+cons =
+    Cons
 
 
 fromString : String -> Sequence Char
@@ -92,6 +99,23 @@ lengthHelper n s =
 
 
 -- CONVERT
+
+
+mapWithState : (a -> state -> ( b, state )) -> state -> Sequence a -> Sequence b
+mapWithState f state s =
+    case s of
+        Empty ->
+            Empty
+
+        Cons head tail ->
+            let
+                ( newHead, newState ) =
+                    f head state
+            in
+            Cons newHead (mapWithState f newState tail)
+
+        Thunk t ->
+            Thunk (\_ -> mapWithState f state (t ()))
 
 
 uncons : Sequence a -> Maybe ( a, Sequence a )
