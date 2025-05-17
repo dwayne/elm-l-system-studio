@@ -1,7 +1,8 @@
 module Sequence exposing
-    ( Sequence(..)
+    ( Sequence
     , concat
     , concatMap
+    , empty
     , fromString
     , length
     , singleton
@@ -17,7 +18,12 @@ type Sequence a
 
 
 
--- CONSTRUCT
+-- CREATE
+
+
+empty : Sequence a
+empty =
+    Empty
 
 
 singleton : a -> Sequence a

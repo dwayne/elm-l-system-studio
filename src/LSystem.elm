@@ -6,7 +6,7 @@ import Sequence exposing (Sequence)
 
 generate : Int -> List ( Char, String ) -> String -> Sequence Char
 generate n rules axiom =
-    generateHelper n (Rules.fromList rules) (Sequence.fromString axiom)
+    generateHelper n (Rules.build rules axiom) (Sequence.fromString axiom)
 
 
 generateHelper : Int -> Rules -> Sequence Char -> Sequence Char
