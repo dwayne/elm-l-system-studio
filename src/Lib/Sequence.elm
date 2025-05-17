@@ -4,9 +4,9 @@ module Lib.Sequence exposing
     , concatMap
     , cons
     , empty
+    , filterMapWithState
     , fromString
     , length
-    , mapWithState
     , singleton
     , toList
     , uncons
@@ -101,21 +101,26 @@ lengthHelper n s =
 -- CONVERT
 
 
-mapWithState : (a -> state -> ( b, state )) -> state -> Sequence a -> Sequence b
-mapWithState f state s =
+filterMapWithState : (a -> state -> ( Maybe b, state )) -> state -> Sequence a -> Sequence b
+filterMapWithState f state s =
     case s of
         Empty ->
             Empty
 
         Cons head tail ->
             let
-                ( newHead, newState ) =
+                ( maybeNewHead, newState ) =
                     f head state
             in
-            Cons newHead (mapWithState f newState tail)
+            case maybeNewHead of
+                Just newHead ->
+                    Cons newHead (filterMapWithState f newState tail)
+
+                Nothing ->
+                    filterMapWithState f newState tail
 
         Thunk t ->
-            Thunk (\_ -> mapWithState f state (t ()))
+            Thunk (\_ -> filterMapWithState f state (t ()))
 
 
 uncons : Sequence a -> Maybe ( a, Sequence a )

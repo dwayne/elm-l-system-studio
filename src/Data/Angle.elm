@@ -1,4 +1,4 @@
-module Data.Angle exposing (Angle, add, fromDegrees, toRadians, zero)
+module Data.Angle exposing (Angle, add, fromDegrees, negate, toRadians, zero)
 
 
 type Angle
@@ -13,6 +13,11 @@ zero =
 fromDegrees : Float -> Angle
 fromDegrees =
     Deg << normalize
+
+
+negate : Angle -> Angle
+negate (Deg a) =
+    fromDegrees -a
 
 
 add : Angle -> Angle -> Angle

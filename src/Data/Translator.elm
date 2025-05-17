@@ -1,5 +1,6 @@
 module Data.Translator exposing (Instruction(..), translate)
 
+import Data.Angle as Angle
 import Data.Dictionary as Dictionary exposing (Dictionary, Meaning(..))
 import Data.Position exposing (Position)
 import Data.Settings exposing (Settings)
@@ -8,8 +9,7 @@ import Lib.Sequence as Sequence exposing (Sequence)
 
 
 type Instruction
-    = Nop
-    | MoveTo Position
+    = MoveTo Position
     | LineTo Position
 
 
@@ -23,14 +23,14 @@ translate dictionary settings chars =
             MoveTo startState.turtle.position
 
         tail =
-            Sequence.mapWithState
+            Sequence.filterMapWithState
                 (\ch state ->
                     case Dictionary.find ch dictionary of
                         Just meaning ->
                             translateMeaning settings meaning state
 
                         Nothing ->
-                            ( Nop, state )
+                            ( Nothing, state )
                 )
                 startState
                 chars
@@ -38,7 +38,7 @@ translate dictionary settings chars =
     Sequence.cons head tail
 
 
-translateMeaning : Settings -> Meaning -> State -> ( Instruction, State )
+translateMeaning : Settings -> Meaning -> State -> ( Maybe Instruction, State )
 translateMeaning settings meaning state =
     case meaning of
         Move ->
@@ -46,7 +46,7 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk settings.lineLength state.turtle
             in
-            ( LineTo turtle.position
+            ( Just <| LineTo turtle.position
             , { state | turtle = turtle }
             )
 
@@ -55,12 +55,49 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk settings.lineLength state.turtle
             in
-            ( MoveTo turtle.position
+            ( Just <| MoveTo turtle.position
             , { state | turtle = turtle }
             )
 
+        TurnLeft ->
+            let
+                angle =
+                    if state.swapPlusMinus then
+                        settings.turningAngle
+
+                    else
+                        Angle.negate settings.turningAngle
+
+                turtle =
+                    Turtle.turn angle state.turtle
+            in
+            ( Nothing
+            , { state | turtle = turtle }
+            )
+
+        TurnRight ->
+            let
+                angle =
+                    if state.swapPlusMinus then
+                        Angle.negate settings.turningAngle
+
+                    else
+                        settings.turningAngle
+
+                turtle =
+                    Turtle.turn angle state.turtle
+            in
+            ( Nothing
+            , { state | turtle = turtle }
+            )
+
+        SwapPlusMinus ->
+            ( Nothing
+            , { state | swapPlusMinus = not state.swapPlusMinus }
+            )
+
         _ ->
-            ( Nop, state )
+            ( Nothing, state )
 
 
 
