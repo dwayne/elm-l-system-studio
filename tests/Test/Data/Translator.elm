@@ -106,6 +106,16 @@ suite =
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 3 } ]
+        , test "Example 10" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | turningAngleIncrement = Angle.fromDegrees 45 }
+                in
+                Sequence.fromString "))))))()()+f"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
         ]
 
 

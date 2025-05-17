@@ -1,4 +1,4 @@
-module Data.Angle exposing (Angle, add, fromDegrees, negate, toRadians, zero)
+module Data.Angle exposing (Angle, add, fromDegrees, negate, sub, toRadians, zero)
 
 
 type Angle
@@ -23,6 +23,11 @@ negate (Deg a) =
 add : Angle -> Angle -> Angle
 add (Deg a) (Deg b) =
     fromDegrees <| a + b
+
+
+sub : Angle -> Angle -> Angle
+sub (Deg a) (Deg b) =
+    fromDegrees <| a - b
 
 
 toRadians : Angle -> Float

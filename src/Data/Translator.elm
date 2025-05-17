@@ -1,6 +1,6 @@
 module Data.Translator exposing (Instruction(..), translate)
 
-import Data.Angle as Angle
+import Data.Angle as Angle exposing (Angle)
 import Data.Dictionary as Dictionary exposing (Dictionary, Meaning(..))
 import Data.Position exposing (Position)
 import Data.Settings exposing (Settings)
@@ -136,6 +136,16 @@ translateMeaning settings meaning state =
             , { state | swapPlusMinus = not state.swapPlusMinus }
             )
 
+        IncrementTurningAngle ->
+            ( Nothing
+            , { state | turningAngle = Angle.add state.turningAngle settings.turningAngleIncrement }
+            )
+
+        DecrementTurningAngle ->
+            ( Nothing
+            , { state | turningAngle = Angle.sub state.turningAngle settings.turningAngleIncrement }
+            )
+
         _ ->
             ( Nothing, state )
 
@@ -148,6 +158,7 @@ type alias State =
     { turtle : Turtle
     , stack : List Turtle
     , lineWidth : Float
+    , turningAngle : Angle
     , swapPlusMinus : Bool
     }
 
@@ -157,5 +168,6 @@ initState settings =
     { turtle = Turtle.new settings.startPosition settings.startHeading
     , stack = []
     , lineWidth = settings.lineWidth
+    , turningAngle = settings.turningAngle
     , swapPlusMinus = False
     }
