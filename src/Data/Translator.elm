@@ -131,6 +131,15 @@ translateMeaning settings meaning state =
             , { state | lineWidth = state.lineWidth - settings.lineWidthIncrement }
             )
 
+        DrawDot ->
+            Debug.todo "Implement and test DrawDot"
+
+        OpenPolygon ->
+            Debug.todo "Implement and test OpenPolygon"
+
+        ClosePolygon ->
+            Debug.todo "Implement and test ClosePolygon"
+
         MultiplyLineLength ->
             ( Nothing
             , { state | lineLength = state.lineLength * settings.lineLengthScaleFactor }
@@ -162,9 +171,6 @@ translateMeaning settings meaning state =
             ( Nothing
             , { state | turningAngle = Angle.sub state.turningAngle settings.turningAngleIncrement }
             )
-
-        _ ->
-            ( Nothing, state )
 
 
 
