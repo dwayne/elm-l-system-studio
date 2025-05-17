@@ -1,4 +1,4 @@
-module Sequence exposing
+module Lib.Sequence exposing
     ( Sequence
     , concat
     , concatMap

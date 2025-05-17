@@ -1,7 +1,7 @@
-module Rules exposing (Rules, build, lookup)
+module Data.Rules exposing (Rules, build, lookup)
 
 import Dict exposing (Dict)
-import Sequence exposing (Sequence)
+import Lib.Sequence as Sequence exposing (Sequence)
 import Set
 
 

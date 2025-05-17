@@ -1,8 +1,8 @@
-module Test.LSystem exposing (suite)
+module Test.Data.LSystem exposing (suite)
 
+import Data.LSystem as LSystem
 import Expect
-import LSystem
-import Sequence
+import Lib.Sequence as Sequence
 import Test exposing (Test, describe, test)
 
 
@@ -15,7 +15,7 @@ suite =
         axiom =
             "F+F+F+F"
     in
-    describe "LSystem"
+    describe "Data.LSystem"
         [ test "Example 1" <|
             \_ ->
                 LSystem.generate 1 rules axiom

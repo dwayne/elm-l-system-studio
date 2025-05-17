@@ -1,7 +1,8 @@
-module LSystem exposing (generate)
+module Data.LSystem exposing (generate)
 
-import Rules exposing (Rules)
-import Sequence exposing (Sequence)
+import Data.Rules as Rules exposing (Rules)
+import Lib.Function exposing (flip)
+import Lib.Sequence as Sequence exposing (Sequence)
 
 
 generate : Int -> List ( Char, String ) -> String -> Sequence Char
@@ -20,8 +21,3 @@ generateHelper n rules current =
                 Sequence.concatMap (flip Rules.lookup rules) current
         in
         generateHelper (n - 1) rules next
-
-
-flip : (a -> b -> c) -> b -> a -> c
-flip f b a =
-    f a b
