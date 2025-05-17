@@ -17,7 +17,7 @@ suite =
                 Sequence.fromString "F"
                     |> Translator.translate Dictionary.default defaultSettings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 1 } ]
         , test "Example 2" <|
             \_ ->
                 Sequence.fromString "f"
@@ -33,10 +33,10 @@ suite =
                     alpha =
                         degrees 270
                 in
-                Sequence.fromString "+F"
+                Sequence.fromString "+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
         , test "Example 4" <|
             \_ ->
                 let
@@ -46,10 +46,10 @@ suite =
                     alpha =
                         degrees 90
                 in
-                Sequence.fromString "&+F"
+                Sequence.fromString "&+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
         , test "Example 5" <|
             \_ ->
                 let
@@ -59,10 +59,10 @@ suite =
                     alpha =
                         degrees 90
                 in
-                Sequence.fromString "-F"
+                Sequence.fromString "-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
         , test "Example 6" <|
             \_ ->
                 let
@@ -72,30 +72,40 @@ suite =
                     alpha =
                         degrees 270
                 in
-                Sequence.fromString "&-F"
+                Sequence.fromString "&-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
         , test "Example 7" <|
             \_ ->
                 let
                     settings =
                         { defaultSettings | turningAngle = Angle.fromDegrees 45 }
                 in
-                Sequence.fromString "----|F"
+                Sequence.fromString "----|f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
         , test "Example 8" <|
             \_ ->
                 let
                     settings =
                         { defaultSettings | turningAngle = Angle.fromDegrees 90 }
                 in
-                Sequence.fromString "[+]F"
+                Sequence.fromString "[+]f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+        , test "Example 9" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | lineWidthIncrement = 1 }
+                in
+                Sequence.fromString "###!F"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 3 } ]
         ]
 
 

@@ -10,7 +10,10 @@ import Lib.Sequence as Sequence exposing (Sequence)
 
 type Instruction
     = MoveTo Position
-    | LineTo Position
+    | LineTo
+        { position : Position
+        , lineWidth : Float
+        }
 
 
 translate : Dictionary -> Settings -> Sequence Char -> Sequence Instruction
@@ -46,7 +49,7 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk settings.lineLength state.turtle
             in
-            ( Just <| LineTo turtle.position
+            ( Just <| LineTo { position = turtle.position, lineWidth = state.lineWidth }
             , { state | turtle = turtle }
             )
 
@@ -118,6 +121,16 @@ translateMeaning settings meaning state =
                     { state | turtle = turtle, stack = restStack }
             )
 
+        IncrementLineWidth ->
+            ( Nothing
+            , { state | lineWidth = state.lineWidth + settings.lineWidthIncrement }
+            )
+
+        DecrementLineWidth ->
+            ( Nothing
+            , { state | lineWidth = state.lineWidth - settings.lineWidthIncrement }
+            )
+
         SwapPlusMinus ->
             ( Nothing
             , { state | swapPlusMinus = not state.swapPlusMinus }
@@ -134,6 +147,7 @@ translateMeaning settings meaning state =
 type alias State =
     { turtle : Turtle
     , stack : List Turtle
+    , lineWidth : Float
     , swapPlusMinus : Bool
     }
 
@@ -142,5 +156,6 @@ initState : Settings -> State
 initState settings =
     { turtle = Turtle.new settings.startPosition settings.startHeading
     , stack = []
+    , lineWidth = settings.lineWidth
     , swapPlusMinus = False
     }

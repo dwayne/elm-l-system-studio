@@ -10,6 +10,7 @@ type alias Settings =
     , startHeading : Angle
     , lineLength : Float
     , lineLengthScaleFactor : Float
+    , lineWidth : Float
     , lineWidthIncrement : Float
     , turningAngle : Angle
     , turningAngleIncrement : Angle
@@ -24,6 +25,7 @@ default =
     , startHeading = Angle.zero
     , lineLength = 1
     , lineLengthScaleFactor = 1
+    , lineWidth = 1
     , lineWidthIncrement = 0
     , turningAngle = Angle.zero
     , turningAngleIncrement = Angle.zero
