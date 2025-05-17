@@ -1,4 +1,4 @@
-module Data.LSystem exposing (generate)
+module Data.Generator exposing (generate)
 
 import Data.Rules as Rules exposing (Rules)
 import Lib.Function exposing (flip)

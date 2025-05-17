@@ -1,6 +1,6 @@
-module Test.Data.LSystem exposing (suite)
+module Test.Data.Generator exposing (suite)
 
-import Data.LSystem as LSystem
+import Data.Generator as Generator
 import Expect
 import Lib.Sequence as Sequence
 import Test exposing (Test, describe, test)
@@ -15,16 +15,16 @@ suite =
         axiom =
             "F+F+F+F"
     in
-    describe "Data.LSystem"
+    describe "Data.Generator"
         [ test "Example 1" <|
             \_ ->
-                LSystem.generate 1 rules axiom
+                Generator.generate 1 rules axiom
                     |> Sequence.toList
                     |> String.fromList
                     |> Expect.equal "F+F-F-FF+F+F-F+F+F-F-FF+F+F-F+F+F-F-FF+F+F-F+F+F-F-FF+F+F-F"
         , test "Example 2" <|
             \_ ->
-                LSystem.generate 6 rules axiom
+                Generator.generate 6 rules axiom
                     |> Sequence.length
                     |> Expect.equal 1947355
         ]
