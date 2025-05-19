@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
+
+    <title>L-System Studio</title>
+    <style>
+      .canvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="./app.js"></script>
+    <script>
+      const app = Elm.Main.init({
+        node: document.getElementById("app")
+      });
+
+      setTimeout(() => {
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+
+        app.ports.moveTo.subscribe(({ x, y }) => {
+          ctx.moveTo(x, y);
+        });
+
+        app.ports.lineTo.subscribe(({ x, y, lineWidth }) => {
+          ctx.lineWidth = lineWidth;
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        });
+      }, 0);
+    </script>
+  </body>
+</html>

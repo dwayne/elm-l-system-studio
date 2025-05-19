@@ -6,6 +6,7 @@ module Lib.Sequence exposing
     , empty
     , filterMapWithState
     , fromString
+    , isEmpty
     , length
     , singleton
     , toList
@@ -77,6 +78,19 @@ concatMap f s =
 
 
 -- QUERY
+
+
+isEmpty : Sequence a -> Bool
+isEmpty s =
+    case s of
+        Empty ->
+            True
+
+        Cons _ _ ->
+            False
+
+        Thunk t ->
+            isEmpty (t ())
 
 
 length : Sequence a -> Int
