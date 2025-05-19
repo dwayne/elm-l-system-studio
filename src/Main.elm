@@ -34,22 +34,25 @@ init : () -> ( Model, Cmd msg )
 init =
     let
         rules =
-            [ ( 'F', "FF+F-F+F+FF" ) ]
+            [ ( 'F', "FF" )
+            , ( 'X', "F-[[X]+X]+F[+FX]-X" )
+            ]
 
         axiom =
-            "F+F+F+F"
+            "X"
 
         chars =
-            Generator.generate 3 rules axiom
+            Generator.generate 4 rules axiom
 
         defaultSettings =
             Settings.default
 
         settings =
             { defaultSettings
-                | startPosition = ( 500, 500 )
+                | startPosition = ( 500, 750 )
+                , startHeading = Angle.fromDegrees -90
                 , lineLength = 10
-                , turningAngle = Angle.fromDegrees 90
+                , turningAngle = Angle.fromDegrees 22.5
             }
 
         instructions =
