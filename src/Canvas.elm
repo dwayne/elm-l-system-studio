@@ -32,6 +32,14 @@ type alias Line =
     }
 
 
+linesG : Random.Generator (List Line)
+linesG =
+    --
+    -- A list of 1000 randomly placed lines.
+    --
+    Random.list 1000 lineG
+
+
 lineG : Random.Generator Line
 lineG =
     Random.map4 Line intG intG intG intG
@@ -42,12 +50,12 @@ intG =
     Random.int 0 500
 
 
-port drawLine : JE.Value -> Cmd msg
+port drawLines : JE.Value -> Cmd msg
 
 
 type Msg
     = GotAnimationFrame Float
-    | GotLine Line
+    | GotLines (List Line)
 
 
 update : (Msg -> msg) -> Msg -> State -> ( State, Cmd msg )
@@ -60,7 +68,7 @@ update onChange msg (State state) =
             in
             if elapsed >= msPerFrame then
                 ( State { state | elapsed = elapsed - msPerFrame }
-                , Random.generate (onChange << GotLine) lineG
+                , Random.generate (onChange << GotLines) linesG
                 )
 
             else
@@ -68,23 +76,27 @@ update onChange msg (State state) =
                 , Cmd.none
                 )
 
-        GotLine { x1, y1, x2, y2 } ->
+        GotLines lines ->
             case Sequence.uncons state.sequence of
                 Just ( _, restSequence ) ->
                     ( State { state | sequence = restSequence }
-                    , drawLine <|
-                        JE.object
-                            [ ( "x1", JE.int x1 )
-                            , ( "y1", JE.int y1 )
-                            , ( "x2", JE.int x2 )
-                            , ( "y2", JE.int y2 )
-                            ]
+                    , drawLines <| JE.list encodeLine lines
                     )
 
                 Nothing ->
                     ( State state
                     , Cmd.none
                     )
+
+
+encodeLine : Line -> JE.Value
+encodeLine { x1, y1, x2, y2 } =
+    JE.object
+        [ ( "x1", JE.int x1 )
+        , ( "y1", JE.int y1 )
+        , ( "x2", JE.int x2 )
+        , ( "y2", JE.int y2 )
+        ]
 
 
 fps : Float
