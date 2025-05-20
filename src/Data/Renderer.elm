@@ -1,7 +1,5 @@
 port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, update)
 
--- TODO: Extract ports.
-
 import Browser.Events as BE
 import Data.Translator exposing (Instruction(..))
 import Json.Encode as JE
@@ -33,12 +31,6 @@ init instructions =
         }
 
 
-port moveTo : JE.Value -> Cmd msg
-
-
-port lineTo : JE.Value -> Cmd msg
-
-
 type Msg
     = GotAnimationFrame Float
 
@@ -59,26 +51,7 @@ update onChange msg (Renderer state) =
                 case Sequence.uncons state.instructions of
                     Just ( instruction, restInstructions ) ->
                         ( Renderer { state | elapsed = newElapsed, instructions = restInstructions }
-                          -- TODO: Extract into a function
-                        , case instruction of
-                            MoveTo ( x, y ) ->
-                                moveTo <|
-                                    JE.object
-                                        [ ( "x", JE.float x )
-                                        , ( "y", JE.float y )
-                                        ]
-
-                            LineTo { position, lineWidth } ->
-                                let
-                                    ( x, y ) =
-                                        position
-                                in
-                                lineTo <|
-                                    JE.object
-                                        [ ( "x", JE.float x )
-                                        , ( "y", JE.float y )
-                                        , ( "lineWidth", JE.float lineWidth )
-                                        ]
+                        , render instruction
                         )
 
                     Nothing ->
@@ -90,6 +63,35 @@ update onChange msg (Renderer state) =
                 ( Renderer { state | elapsed = elapsed }
                 , Cmd.none
                 )
+
+
+render : Instruction -> Cmd msg
+render instruction =
+    case instruction of
+        MoveTo ( x, y ) ->
+            moveTo <|
+                JE.object
+                    [ ( "x", JE.float x )
+                    , ( "y", JE.float y )
+                    ]
+
+        LineTo { position, lineWidth } ->
+            let
+                ( x, y ) =
+                    position
+            in
+            lineTo <|
+                JE.object
+                    [ ( "x", JE.float x )
+                    , ( "y", JE.float y )
+                    , ( "lineWidth", JE.float lineWidth )
+                    ]
+
+
+port moveTo : JE.Value -> Cmd msg
+
+
+port lineTo : JE.Value -> Cmd msg
 
 
 subscriptions : (Msg -> msg) -> Renderer -> Sub msg
