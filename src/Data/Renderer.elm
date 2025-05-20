@@ -47,17 +47,13 @@ update onChange msg (Renderer state) =
                 let
                     newElapsed =
                         elapsed - msPerFrame
-                in
-                case Sequence.uncons state.instructions of
-                    Just ( instruction, restInstructions ) ->
-                        ( Renderer { state | elapsed = newElapsed, instructions = restInstructions }
-                        , render instruction
-                        )
 
-                    Nothing ->
-                        ( Renderer state
-                        , Cmd.none
-                        )
+                    ( instructions, cmd ) =
+                        render 100 state.instructions
+                in
+                ( Renderer { state | elapsed = newElapsed, instructions = instructions }
+                , cmd
+                )
 
             else
                 ( Renderer { state | elapsed = elapsed }
@@ -65,33 +61,68 @@ update onChange msg (Renderer state) =
                 )
 
 
-render : Instruction -> Cmd msg
-render instruction =
+render : Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+render =
+    renderHelper []
+
+
+renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+renderHelper values atMost instructions =
+    if atMost > 0 then
+        case Sequence.uncons instructions of
+            Just ( instruction, restInstructions ) ->
+                renderHelper
+                    (encode instruction :: values)
+                    (atMost - 1)
+                    restInstructions
+
+            Nothing ->
+                ( instructions
+                , toCmd values
+                )
+
+    else
+        ( instructions
+        , toCmd values
+        )
+
+
+toCmd : List JE.Value -> Cmd msg
+toCmd values =
+    if values == [] then
+        Cmd.none
+
+    else
+        values
+            |> List.reverse
+            |> JE.list identity
+            |> drawBatch
+
+
+encode : Instruction -> JE.Value
+encode instruction =
     case instruction of
         MoveTo ( x, y ) ->
-            moveTo <|
-                JE.object
-                    [ ( "x", JE.float x )
-                    , ( "y", JE.float y )
-                    ]
+            JE.object
+                [ ( "function", JE.string "moveTo" )
+                , ( "x", JE.float x )
+                , ( "y", JE.float y )
+                ]
 
         LineTo { position, lineWidth } ->
             let
                 ( x, y ) =
                     position
             in
-            lineTo <|
-                JE.object
-                    [ ( "x", JE.float x )
-                    , ( "y", JE.float y )
-                    , ( "lineWidth", JE.float lineWidth )
-                    ]
+            JE.object
+                [ ( "function", JE.string "lineTo" )
+                , ( "x", JE.float x )
+                , ( "y", JE.float y )
+                , ( "lineWidth", JE.float lineWidth )
+                ]
 
 
-port moveTo : JE.Value -> Cmd msg
-
-
-port lineTo : JE.Value -> Cmd msg
+port drawBatch : JE.Value -> Cmd msg
 
 
 subscriptions : (Msg -> msg) -> Renderer -> Sub msg

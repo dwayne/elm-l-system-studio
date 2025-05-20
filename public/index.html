@@ -23,14 +23,23 @@
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
 
-        app.ports.moveTo.subscribe(({ x, y }) => {
-          ctx.moveTo(x, y);
-        });
+        app.ports.drawBatch.subscribe((operations) => {
+          for (const op of operations) {
+            switch (op.function) {
+              case "moveTo":
+                ctx.moveTo(op.x, op.y);
+                break;
 
-        app.ports.lineTo.subscribe(({ x, y, lineWidth }) => {
-          ctx.lineWidth = lineWidth;
-          ctx.lineTo(x, y);
-          ctx.stroke();
+              case "lineTo":
+                ctx.lineWidth = op.lineWidth;
+                ctx.lineTo(op.x, op.y);
+                ctx.stroke();
+                break;
+
+              default:
+                console.log("Unknown operation:", op);
+            }
+          }
         });
       }, 0);
     </script>
