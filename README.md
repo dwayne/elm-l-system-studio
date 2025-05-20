@@ -87,3 +87,131 @@ settings =
         , turningAngle = Angle.fromDegrees 22.5
     }
 ```
+
+### Example 4
+
+```elm
+rules =
+    [ ( 'F', ">F<" )
+    , ( 'a', "F[+x]Fb" )
+    , ( 'b', "F[-y]Fa" )
+    , ( 'x', "a" )
+    , ( 'y', "b" )
+    ]
+
+axiom =
+    "a"
+
+chars =
+    Generator.generate 15 rules axiom
+
+defaultSettings =
+    Settings.default
+
+settings =
+    { defaultSettings
+        | startPosition = ( 500, 750 )
+        , startHeading = Angle.fromDegrees 270
+        , lineLength = 1
+        , lineLengthScaleFactor = 1.36
+        , turningAngle = Angle.fromDegrees 45
+    }
+```
+
+### Example 5
+
+```elm
+rules =
+    [ ( 'F', "FF+F++F+F" )
+    ]
+
+axiom =
+    "F+F+F+F"
+
+chars =
+    Generator.generate 4 rules axiom
+
+defaultSettings =
+    Settings.default
+
+settings =
+    { defaultSettings
+        | startPosition = ( 250, 750 )
+        , lineLength = 5
+        , turningAngle = Angle.fromDegrees 90
+    }
+```
+
+### Example 6
+
+```elm
+rules =
+    [ ( 'X', "XFYFX+F+YFXFY-F-XFYFX" )
+    , ( 'Y', "YFXFY-F-XFYFX+F+YFXFY" )
+    ]
+
+axiom =
+    "X"
+
+chars =
+    Generator.generate 4 rules axiom
+
+defaultSettings =
+    Settings.default
+
+settings =
+    { defaultSettings
+        | startPosition = ( 500, 750 )
+        , startHeading = Angle.fromDegrees 270
+        , lineLength = 5
+        , turningAngle = Angle.fromDegrees 90
+    }
+```
+
+### Example 7
+
+```elm
+rules =
+    [ ( 'F', "F-F+F+F-F" )
+    ]
+
+axiom =
+    "F"
+
+chars =
+    Generator.generate 5 rules axiom
+
+defaultSettings =
+    Settings.default
+
+settings =
+    { defaultSettings
+        | startPosition = ( 150, 500 )
+        , lineLength = 3
+        , turningAngle = Angle.fromDegrees 90
+    }
+```
+
+### Example 8
+
+```elm
+rules =
+    [ ( 'F', "F-F++F-F" )
+    ]
+
+axiom =
+    "F++F++F"
+
+chars =
+    Generator.generate 4 rules axiom
+
+defaultSettings =
+    Settings.default
+
+settings =
+    { defaultSettings
+        | startPosition = ( 350, 650 )
+        , lineLength = 6
+        , turningAngle = Angle.fromDegrees 60
+    }
+```
