@@ -74,7 +74,7 @@ axiom =
     "X"
 
 chars =
-    Generator.generate 4 rules axiom
+    Generator.generate 6 rules axiom
 
 defaultSettings =
     Settings.default
@@ -82,10 +82,8 @@ defaultSettings =
 settings =
     { defaultSettings
         | startPosition = ( 500, 750 )
-        , startHeading = Angle.fromDegrees -90
-        , lineLength = 10
+        , startHeading = Angle.fromDegrees 270
+        , lineLength = 3
         , turningAngle = Angle.fromDegrees 22.5
     }
 ```
-
-The diagram it produces looks incorrect. I think I'm handling `Pop` incorrectly. When I restore the turtle I probably need to use a `MoveTo` instruction to return the turtle back to its original position.

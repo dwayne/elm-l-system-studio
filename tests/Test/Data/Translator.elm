@@ -95,8 +95,18 @@ suite =
                 Sequence.fromString "[+]f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
         , test "Example 9" <|
+            \_ ->
+                let
+                    settings =
+                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
+                in
+                Sequence.fromString "[f]F"
+                    |> Translator.translate Dictionary.default settings
+                    |> Sequence.toList
+                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ), MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 1 } ]
+        , test "Example 10" <|
             \_ ->
                 let
                     settings =
@@ -106,7 +116,7 @@ suite =
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 3 } ]
-        , test "Example 10" <|
+        , test "Example 11" <|
             \_ ->
                 let
                     settings =
@@ -119,7 +129,7 @@ suite =
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
-        , test "Example 11" <|
+        , test "Example 12" <|
             \_ ->
                 let
                     settings =

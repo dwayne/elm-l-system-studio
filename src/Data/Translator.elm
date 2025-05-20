@@ -112,14 +112,14 @@ translateMeaning settings meaning state =
             )
 
         Pop ->
-            ( Nothing
-            , case state.stack of
+            case state.stack of
                 [] ->
-                    state
+                    ( Nothing, state )
 
                 turtle :: restStack ->
-                    { state | turtle = turtle, stack = restStack }
-            )
+                    ( Just <| MoveTo turtle.position
+                    , { state | turtle = turtle, stack = restStack }
+                    )
 
         IncrementLineWidth ->
             ( Nothing

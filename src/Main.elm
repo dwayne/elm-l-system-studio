@@ -42,7 +42,7 @@ init =
             "X"
 
         chars =
-            Generator.generate 4 rules axiom
+            Generator.generate 6 rules axiom
 
         defaultSettings =
             Settings.default
@@ -50,8 +50,8 @@ init =
         settings =
             { defaultSettings
                 | startPosition = ( 500, 750 )
-                , startHeading = Angle.fromDegrees -90
-                , lineLength = 10
+                , startHeading = Angle.fromDegrees 270
+                , lineLength = 3
                 , turningAngle = Angle.fromDegrees 22.5
             }
 
