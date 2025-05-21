@@ -2,7 +2,7 @@ module Data.Rules exposing (Rules, build, lookup)
 
 import Dict exposing (Dict)
 import Lib.Sequence as Sequence exposing (Sequence)
-import Set
+import Set exposing (Set)
 
 
 type Rules
@@ -14,47 +14,55 @@ build rules axiom =
     let
         identity =
             buildIdentity rules axiom
+
+        dict =
+            List.foldl
+                (\( ch, replacement ) ->
+                    Dict.insert ch (Sequence.fromString replacement)
+                )
+                identity
+                rules
     in
-    rules
-        |> List.map (Tuple.mapSecond Sequence.fromString)
-        |> Dict.fromList
-        |> Dict.union identity
-        |> Rules
+    Rules dict
 
 
 buildIdentity : List ( Char, String ) -> String -> Dict Char (Sequence Char)
 buildIdentity rules axiom =
     let
         axiomSet =
-            axiom
-                |> String.toList
-                |> Set.fromList
+            toCharSet Set.empty axiom
 
         ( keySet, valueSet ) =
-            rules
-                |> List.foldl
-                    (\( ch, replacement ) ( prevKeySet, prevValueSet ) ->
-                        ( Set.insert ch prevKeySet
-                        , replacement
-                            |> String.toList
-                            |> Set.fromList
-                            |> Set.union prevValueSet
-                        )
+            List.foldl
+                (\( ch, replacement ) ( prevKeySet, prevValueSet ) ->
+                    ( Set.insert ch prevKeySet
+                    , toCharSet prevValueSet replacement
                     )
-                    ( Set.empty, Set.empty )
+                )
+                ( Set.empty, axiomSet )
+                rules
 
         identityKeySet =
-            Set.diff (Set.union axiomSet valueSet) keySet
+            Set.diff valueSet keySet
     in
-    identityKeySet
-        |> Set.foldl
-            (\ch ->
-                Dict.insert ch (Sequence.singleton ch)
-            )
-            Dict.empty
+    Set.foldl
+        (\ch ->
+            Dict.insert ch (Sequence.singleton ch)
+        )
+        Dict.empty
+        identityKeySet
+
+
+toCharSet : Set Char -> String -> Set Char
+toCharSet =
+    String.foldl Set.insert
 
 
 lookup : Char -> Rules -> Sequence Char
 lookup ch (Rules table) =
-    Dict.get ch table
-        |> Maybe.withDefault Sequence.empty
+    case Dict.get ch table of
+        Just replacement ->
+            replacement
+
+        Nothing ->
+            Sequence.empty
