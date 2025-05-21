@@ -21,7 +21,7 @@ type alias Settings =
 
 default : Settings
 default =
-    { startPosition = ( 0, 0 )
+    { startPosition = { x = 0, y = 0 }
     , startHeading = Angle.zero
     , lineLength = 1
     , lineLengthScaleFactor = 1

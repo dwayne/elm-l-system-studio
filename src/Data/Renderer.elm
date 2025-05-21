@@ -1,7 +1,7 @@
 port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, update)
 
 import Browser.Events as BE
-import Data.Translator exposing (Instruction(..))
+import Data.Instruction exposing (Instruction(..))
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
 
@@ -102,7 +102,7 @@ toCmd values =
 encode : Instruction -> JE.Value
 encode instruction =
     case instruction of
-        MoveTo ( x, y ) ->
+        MoveTo { x, y } ->
             JE.object
                 [ ( "function", JE.string "moveTo" )
                 , ( "x", JE.float x )
@@ -110,16 +110,15 @@ encode instruction =
                 ]
 
         LineTo { position, lineWidth } ->
-            let
-                ( x, y ) =
-                    position
-            in
             JE.object
                 [ ( "function", JE.string "lineTo" )
-                , ( "x", JE.float x )
-                , ( "y", JE.float y )
+                , ( "x", JE.float position.x )
+                , ( "y", JE.float position.y )
                 , ( "lineWidth", JE.float lineWidth )
                 ]
+
+        _ ->
+            JE.int 0
 
 
 port drawBatch : JE.Value -> Cmd msg

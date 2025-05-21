@@ -48,7 +48,7 @@ init =
 
         settings =
             { defaultSettings
-                | startPosition = ( 350, 650 )
+                | startPosition = { x = 350, y = 650 }
                 , lineLength = 6
                 , turningAngle = Angle.fromDegrees 60
             }

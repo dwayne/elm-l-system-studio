@@ -1,5 +1,5 @@
 module Lib.Sequence exposing
-    ( Sequence
+    ( Sequence(..)
     , concat
     , concatMap
     , cons

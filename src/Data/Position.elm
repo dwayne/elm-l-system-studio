@@ -4,19 +4,21 @@ import Data.Angle as Angle exposing (Angle)
 
 
 type alias Position =
-    ( Float, Float )
+    { x : Float
+    , y : Float
+    }
 
 
 translate : Float -> Angle -> Position -> Position
-translate distance heading ( x, y ) =
+translate distance heading { x, y } =
     let
-        alpha =
-            Angle.toRadians heading
+        ( sinAlpha, cosAlpha ) =
+            Angle.sinAndCos heading
 
         dx =
-            distance * cos alpha
+            distance * cosAlpha
 
         dy =
-            distance * sin alpha
+            distance * sinAlpha
     in
-    ( x + dx, y + dy )
+    { x = x + dx, y = y + dy }

@@ -2,8 +2,9 @@ module Test.Data.Translator exposing (suite)
 
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
+import Data.Instruction exposing (Instruction(..))
 import Data.Settings as Settings exposing (Settings)
-import Data.Translator as Translator exposing (Instruction(..))
+import Data.Translator as Translator
 import Expect
 import Lib.Sequence as Sequence
 import Test exposing (Test, describe, test)
@@ -17,65 +18,53 @@ suite =
                 Sequence.fromString "F"
                     |> Translator.translate Dictionary.default defaultSettings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 1 } ]
         , test "Example 2" <|
             \_ ->
                 Sequence.fromString "f"
                     |> Translator.translate Dictionary.default defaultSettings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 } ]
         , test "Example 3" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
-
-                    alpha =
-                        degrees 270
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
         , test "Example 4" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
-
-                    alpha =
-                        degrees 90
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "&+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
         , test "Example 5" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
-
-                    alpha =
-                        degrees 90
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
         , test "Example 6" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
-
-                    alpha =
-                        degrees 270
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "&-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( cos alpha, sin alpha ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
         , test "Example 7" <|
             \_ ->
                 let
@@ -85,27 +74,27 @@ suite =
                 Sequence.fromString "----|f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 } ]
         , test "Example 8" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "[+]f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 } ]
         , test "Example 9" <|
             \_ ->
                 let
                     settings =
-                        { defaultSettings | turningAngle = Angle.fromDegrees 90 }
+                        { defaultSettings | turningAngle = Angle.right }
                 in
                 Sequence.fromString "[f]F"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ), MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 }, MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 1 } ]
         , test "Example 10" <|
             \_ ->
                 let
@@ -115,20 +104,20 @@ suite =
                 Sequence.fromString "###!F"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), LineTo { position = ( 1, 0 ), lineWidth = 3 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 3 } ]
         , test "Example 11" <|
             \_ ->
                 let
                     settings =
                         { defaultSettings
-                            | turningAngle = Angle.fromDegrees 90
+                            | turningAngle = Angle.right
                             , turningAngleIncrement = Angle.fromDegrees 45
                         }
                 in
                 Sequence.fromString "))))))()()+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 1, 0 ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 } ]
         , test "Example 12" <|
             \_ ->
                 let
@@ -138,7 +127,7 @@ suite =
                 Sequence.fromString ">ff<f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo ( 0, 0 ), MoveTo ( 5, 0 ), MoveTo ( 10, 0 ), MoveTo ( 11, 0 ) ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 5, y = 0 }, MoveTo { x = 10, y = 0 }, MoveTo { x = 11, y = 0 } ]
         ]
 
 

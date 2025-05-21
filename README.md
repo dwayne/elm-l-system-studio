@@ -33,7 +33,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 250, 750 )
+        | startPosition = { x = 250, y = 750 }
         , lineLength = 5
         , turningAngle = Angle.fromDegrees 90
     }
@@ -56,7 +56,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 500, 500 )
+        | startPosition = { x = 500, y = 500 }
         , lineLength = 10
         , turningAngle = Angle.fromDegrees 90
     }
@@ -81,7 +81,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 500, 750 )
+        | startPosition = { x = 500, y = 750 }
         , startHeading = Angle.fromDegrees 270
         , lineLength = 3
         , turningAngle = Angle.fromDegrees 22.5
@@ -110,7 +110,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 500, 750 )
+        | startPosition = { x = 500, y = 750 }
         , startHeading = Angle.fromDegrees 270
         , lineLength = 1
         , lineLengthScaleFactor = 1.36
@@ -136,7 +136,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 250, 750 )
+        | startPosition = { x = 250, y = 750 }
         , lineLength = 5
         , turningAngle = Angle.fromDegrees 90
     }
@@ -161,7 +161,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 500, 750 )
+        | startPosition = { x = 500, y = 750 }
         , startHeading = Angle.fromDegrees 270
         , lineLength = 5
         , turningAngle = Angle.fromDegrees 90
@@ -186,7 +186,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 150, 500 )
+        | startPosition = { x = 150, y = 500 }
         , lineLength = 3
         , turningAngle = Angle.fromDegrees 90
     }
@@ -210,7 +210,7 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = ( 350, 650 )
+        | startPosition = { x = 350, y = 650 }
         , lineLength = 6
         , turningAngle = Angle.fromDegrees 60
     }

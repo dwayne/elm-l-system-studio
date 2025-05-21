@@ -1,4 +1,15 @@
-module Data.Angle exposing (Angle, add, fromDegrees, negate, sub, toRadians, zero)
+module Data.Angle exposing
+    ( Angle
+    , add
+    , fromDegrees
+    , negate
+    , right
+    , sinAndCos
+    , straight
+    , sub
+    , toRadians
+    , zero
+    )
 
 
 type Angle
@@ -8,6 +19,16 @@ type Angle
 zero : Angle
 zero =
     Deg 0
+
+
+right : Angle
+right =
+    Deg 90
+
+
+straight : Angle
+straight =
+    Deg 180
 
 
 fromDegrees : Float -> Angle
@@ -28,6 +49,30 @@ add (Deg a) (Deg b) =
 sub : Angle -> Angle -> Angle
 sub (Deg a) (Deg b) =
     fromDegrees (a - b)
+
+
+sinAndCos : Angle -> ( Float, Float )
+sinAndCos (Deg angle) =
+    if angle == 0 then
+        ( 0, 1 )
+
+    else if angle == 90 then
+        ( 1, 0 )
+
+    else if angle == 180 then
+        ( 0, -1 )
+
+    else if angle == 270 then
+        ( -1, 0 )
+
+    else
+        let
+            alpha =
+                degrees angle
+        in
+        ( sin alpha
+        , cos alpha
+        )
 
 
 toRadians : Angle -> Float
