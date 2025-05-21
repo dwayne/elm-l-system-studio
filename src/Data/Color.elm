@@ -9,9 +9,9 @@ type Color
 
 black : Color
 black =
-    Color <| Avh4Color.black
+    Color Avh4Color.black
 
 
 white : Color
 white =
-    Color <| Avh4Color.white
+    Color Avh4Color.white

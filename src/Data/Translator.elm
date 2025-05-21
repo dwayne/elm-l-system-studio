@@ -49,7 +49,7 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk state.lineLength state.turtle
             in
-            ( Just <| LineTo { position = turtle.position, lineWidth = state.lineWidth }
+            ( Just (LineTo { position = turtle.position, lineWidth = state.lineWidth })
             , { state | turtle = turtle }
             )
 
@@ -58,7 +58,7 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk state.lineLength state.turtle
             in
-            ( Just <| MoveTo turtle.position
+            ( Just (MoveTo turtle.position)
             , { state | turtle = turtle }
             )
 
@@ -117,7 +117,7 @@ translateMeaning settings meaning state =
                     ( Nothing, state )
 
                 turtle :: restStack ->
-                    ( Just <| MoveTo turtle.position
+                    ( Just (MoveTo turtle.position)
                     , { state | turtle = turtle, stack = restStack }
                     )
 
