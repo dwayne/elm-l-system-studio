@@ -12,22 +12,22 @@ type Rules
 build : List ( Char, String ) -> String -> Rules
 build rules axiom =
     let
-        identity =
-            buildIdentity rules axiom
+        singletons =
+            buildSingletons rules axiom
 
-        dict =
+        table =
             List.foldl
-                (\( ch, replacement ) ->
-                    Dict.insert ch (Sequence.fromString replacement)
+                (\( ch, replacement ) dict ->
+                    Dict.insert ch (Sequence.fromString replacement) dict
                 )
-                identity
+                singletons
                 rules
     in
-    Rules dict
+    Rules table
 
 
-buildIdentity : List ( Char, String ) -> String -> Dict Char (Sequence Char)
-buildIdentity rules axiom =
+buildSingletons : List ( Char, String ) -> String -> Dict Char (Sequence Char)
+buildSingletons rules axiom =
     let
         axiomSet =
             toCharSet Set.empty axiom
@@ -42,20 +42,20 @@ buildIdentity rules axiom =
                 ( Set.empty, axiomSet )
                 rules
 
-        identityKeySet =
+        singletonsKeySet =
             Set.diff valueSet keySet
     in
     Set.foldl
-        (\ch ->
-            Dict.insert ch (Sequence.singleton ch)
+        (\ch dict ->
+            Dict.insert ch (Sequence.singleton ch) dict
         )
         Dict.empty
-        identityKeySet
+        singletonsKeySet
 
 
 toCharSet : Set Char -> String -> Set Char
-toCharSet =
-    String.foldl Set.insert
+toCharSet initialChars s =
+    String.foldl Set.insert initialChars s
 
 
 lookup : Char -> Rules -> Sequence Char
