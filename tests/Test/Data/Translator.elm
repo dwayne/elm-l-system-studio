@@ -34,7 +34,7 @@ suite =
                 Sequence.fromString "+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
         , test "Example 4" <|
             \_ ->
                 let
@@ -44,7 +44,7 @@ suite =
                 Sequence.fromString "&+f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
         , test "Example 5" <|
             \_ ->
                 let
@@ -54,7 +54,7 @@ suite =
                 Sequence.fromString "-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
         , test "Example 6" <|
             \_ ->
                 let
@@ -64,7 +64,7 @@ suite =
                 Sequence.fromString "&-f"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = -1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 0, y = 1 } ]
         , test "Example 7" <|
             \_ ->
                 let

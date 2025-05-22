@@ -56,46 +56,33 @@ translateMeaning settings meaning state =
 
         TurnLeft ->
             let
-                angle =
+                turn =
                     if state.swapPlusMinus then
-                        state.turningAngle
+                        Turtle.turnRight
 
                     else
-                        Angle.negate state.turningAngle
-
-                turtle =
-                    Turtle.turn angle state.turtle
+                        Turtle.turnLeft
             in
             ( Nothing
-            , { state | turtle = turtle }
+            , { state | turtle = turn state.turningAngle state.turtle }
             )
 
         TurnRight ->
             let
-                angle =
+                turn =
                     if state.swapPlusMinus then
-                        Angle.negate state.turningAngle
+                        Turtle.turnLeft
 
                     else
-                        state.turningAngle
-
-                turtle =
-                    Turtle.turn angle state.turtle
+                        Turtle.turnRight
             in
             ( Nothing
-            , { state | turtle = turtle }
+            , { state | turtle = turn state.turningAngle state.turtle }
             )
 
         ReverseDirection ->
-            let
-                angle =
-                    Angle.fromDegrees -180
-
-                turtle =
-                    Turtle.turn angle state.turtle
-            in
             ( Nothing
-            , { state | turtle = turtle }
+            , { state | turtle = Turtle.turnLeft Angle.straight state.turtle }
             )
 
         Push ->

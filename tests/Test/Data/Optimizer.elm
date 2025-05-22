@@ -33,13 +33,13 @@ suite =
             \_ ->
                 let
                     settings =
-                        { defaultSettings | startHeading = Angle.fromDegrees 270 }
+                        { defaultSettings | startHeading = Angle.right }
                 in
                 Sequence.fromString "FFFFF"
                     |> Translator.translate Dictionary.default settings
                     |> Optimizer.simplify
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 0, y = -5 }, lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 0, y = 5 }, lineWidth = 1 } ]
         , test "LineTo followed by LineTo (equal y-coordinates followed by equal x-coordinates)" <|
             \_ ->
                 let
@@ -53,7 +53,7 @@ suite =
                     |> Expect.equal
                         [ MoveTo { x = 0, y = 0 }
                         , LineTo { position = { x = 5, y = 0 }, lineWidth = 1 }
-                        , LineTo { position = { x = 5, y = -5 }, lineWidth = 1 }
+                        , LineTo { position = { x = 5, y = 5 }, lineWidth = 1 }
                         ]
         , test "LineTo followed by LineTo (equal x-coordinates followed by equal y-coordinates)" <|
             \_ ->
@@ -68,7 +68,7 @@ suite =
                     |> Expect.equal
                         [ MoveTo { x = 0, y = 0 }
                         , LineTo { position = { x = 0, y = 5 }, lineWidth = 1 }
-                        , LineTo { position = { x = 5, y = 5 }, lineWidth = 1 }
+                        , LineTo { position = { x = -5, y = 5 }, lineWidth = 1 }
                         ]
         , test "A general example" <|
             \_ ->
