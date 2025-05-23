@@ -1,8 +1,8 @@
 module Main exposing (main)
 
 import Browser as B
-import Canvas
 import Html as H
+import Renderer
 
 
 main : Program () Model Msg
@@ -20,14 +20,14 @@ main =
 
 
 type alias Model =
-    { canvas : Canvas.State
+    { renderer : Renderer.State
     }
 
 
 init : () -> ( Model, Cmd msg )
 init =
     always
-        ( { canvas = Canvas.init }
+        ( { renderer = Renderer.init }
         , Cmd.none
         )
 
@@ -37,28 +37,28 @@ init =
 
 
 type Msg
-    = ChangedCanvas Canvas.Msg
+    = ChangedRenderer Renderer.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ChangedCanvas subMsg ->
+        ChangedRenderer subMsg ->
             let
-                ( canvas, cmd ) =
-                    Canvas.update
-                        ChangedCanvas
+                ( renderer, cmd ) =
+                    Renderer.update
+                        ChangedRenderer
                         subMsg
-                        model.canvas
+                        model.renderer
             in
-            ( { model | canvas = canvas }
+            ( { model | renderer = renderer }
             , cmd
             )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Canvas.subscriptions ChangedCanvas model.canvas
+    Renderer.subscriptions ChangedRenderer model.renderer
 
 
 
@@ -66,5 +66,5 @@ subscriptions model =
 
 
 view : Model -> H.Html msg
-view =
-    always Canvas.view
+view { renderer } =
+    Renderer.view renderer
