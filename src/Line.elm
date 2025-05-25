@@ -12,9 +12,9 @@ type alias Line =
     }
 
 
-lines : Random.Generator (List Line)
-lines =
-    Random.list 1000 line
+lines : Int -> Random.Generator (List Line)
+lines n =
+    Random.list n line
 
 
 line : Random.Generator Line

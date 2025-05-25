@@ -37,7 +37,7 @@ update onChange msg (State state) =
     case msg of
         GotAnimationFrame ->
             ( State state
-            , Random.generate (onChange << GotLines) Line.lines
+            , Random.generate (onChange << GotLines) (Line.lines 100)
             )
 
         GotLines lines ->
@@ -68,4 +68,5 @@ view (State { lines }) =
         { width = 500
         , height = 500
         , lines = lines
+        , attrs = [ HA.style "border" "1px solid black" ]
         }
