@@ -1,33 +1,40 @@
-port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, update)
+module Data.Renderer exposing (Msg, Renderer, init, subscriptions, update, toInfo)
 
 import Browser.Events as BE
 import Data.Instruction exposing (Instruction(..))
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
+import Data.Timer as Timer exposing (Timer)
 
 
 type Renderer
-    = Renderer
-        { instructions : Sequence Instruction
-        , elapsed : Float
-        }
+    = Renderer State
 
 
-fps : Float
-fps =
-    60
+type alias State =
+    { timer : Timer
+    , ipfAsInt : Int
+    , ipfAsFloat : Float
+    , instructions : Sequence Instruction
+    , commands : List JE.Value
+    }
 
 
-msPerFrame : Float
-msPerFrame =
-    1000 / fps
+type alias InitOptions =
+    { fps : Int
+    , ipf : Int
+    , instructions : Sequence Instruction
+    }
 
 
-init : Sequence Instruction -> Renderer
-init instructions =
+init : InitOptions -> Renderer
+init { fps, ipf, instructions } =
     Renderer
-        { instructions = instructions
-        , elapsed = 0
+        { timer = Timer.new fps
+        , ipfAsInt = ipf
+        , ipfAsFloat = toFloat ipf
+        , instructions = instructions
+        , commands = []
         }
 
 
@@ -35,68 +42,53 @@ type Msg
     = GotAnimationFrame Float
 
 
-update : (Msg -> msg) -> Msg -> Renderer -> ( Renderer, Cmd msg )
+update : (Msg -> msg) -> Msg -> Renderer -> Renderer
 update onChange msg (Renderer state) =
     case msg of
         GotAnimationFrame delta ->
             let
-                elapsed =
-                    state.elapsed + delta
+                ( timer, newState ) =
+                    Timer.step delta
+                        (\_ ->
+                            encodeCommands delta state
+                        )
+                        state.timer
             in
-            if elapsed >= msPerFrame then
-                let
-                    newElapsed =
-                        elapsed - msPerFrame
-
-                    ( instructions, cmd ) =
-                        render 100 state.instructions
-                in
-                ( Renderer { state | elapsed = newElapsed, instructions = instructions }
-                , cmd
-                )
-
-            else
-                ( Renderer { state | elapsed = elapsed }
-                , Cmd.none
-                )
+            Renderer { newState | timer = timer }
 
 
-render : Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
-render =
-    renderHelper []
+encodeCommands : Float -> State -> State
+encodeCommands delta state =
+    -- How come we don't get the first command?
+    let
+        fps =
+            Timer.expectedFps state.timer
+
+        n =
+            min state.ipfAsInt (ceiling (fps * state.ipfAsFloat * delta * 0.001))
+
+        ( instructions, commands ) =
+            encodeCommandsHelper n state.instructions []
+    in
+    { state | instructions = instructions, commands = List.reverse commands }
 
 
-renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
-renderHelper values atMost instructions =
-    if atMost > 0 then
+encodeCommandsHelper : Int -> Sequence Instruction -> List JE.Value -> ( Sequence Instruction, List JE.Value )
+encodeCommandsHelper n instructions commands =
+    if n > 0 then
         case Sequence.uncons instructions of
             Just ( instruction, restInstructions ) ->
-                renderHelper
-                    (encode instruction :: values)
-                    (atMost - 1)
+                encodeCommandsHelper
+                    (n - 1)
                     restInstructions
+                    (encode instruction :: commands)
+                    |> Debug.log (Debug.toString instruction)
 
             Nothing ->
-                ( instructions
-                , toCmd values
-                )
+                ( instructions, commands )
 
     else
-        ( instructions
-        , toCmd values
-        )
-
-
-toCmd : List JE.Value -> Cmd msg
-toCmd values =
-    if values == [] then
-        Cmd.none
-
-    else
-        values
-            |> List.reverse
-            |> JE.list identity
-            |> drawBatch
+        ( instructions, commands )
 
 
 encode : Instruction -> JE.Value
@@ -121,9 +113,6 @@ encode instruction =
             JE.int 0
 
 
-port drawBatch : JE.Value -> Cmd msg
-
-
 subscriptions : (Msg -> msg) -> Renderer -> Sub msg
 subscriptions onChange (Renderer { instructions }) =
     if Sequence.isEmpty instructions then
@@ -131,3 +120,20 @@ subscriptions onChange (Renderer { instructions }) =
 
     else
         BE.onAnimationFrameDelta (onChange << GotAnimationFrame)
+
+
+type alias Info =
+    { expectedFps : Float
+    , actualFps : Float
+    , cps : Float
+    , commands : List JE.Value
+    }
+
+
+toInfo : Renderer -> Info
+toInfo (Renderer { timer, commands }) =
+    { expectedFps = Timer.expectedFps timer
+    , actualFps = Timer.actualFps timer
+    , cps = Timer.cps timer
+    , commands = commands
+    }

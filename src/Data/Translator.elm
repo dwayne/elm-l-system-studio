@@ -30,7 +30,7 @@ translate dictionary settings chars =
                 startState
                 chars
     in
-    Sequence.cons head tail
+    Sequence.cons head (Sequence.cons head tail)
 
 
 translateMeaning : Settings -> Meaning -> State -> ( Maybe Instruction, State )

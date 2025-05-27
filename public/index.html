@@ -5,43 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
 
     <title>L-System Studio</title>
-    <style>
-      .canvas {
-        border: 1px solid black;
-      }
-    </style>
   </head>
   <body>
     <div id="app"></div>
     <script src="./app.js"></script>
-    <script>
+    <script type="module">
+      import ElmCanvas from "./elm-canvas.js";
+      customElements.define("elm-canvas", ElmCanvas);
+
       const app = Elm.Main.init({
         node: document.getElementById("app")
       });
-
-      setTimeout(() => {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-
-        app.ports.drawBatch.subscribe((operations) => {
-          for (const op of operations) {
-            switch (op.function) {
-              case "moveTo":
-                ctx.moveTo(op.x, op.y);
-                break;
-
-              case "lineTo":
-                ctx.lineWidth = op.lineWidth;
-                ctx.lineTo(op.x, op.y);
-                ctx.stroke();
-                break;
-
-              default:
-                console.log("Unknown operation:", op);
-            }
-          }
-        });
-      }, 0);
     </script>
   </body>
 </html>

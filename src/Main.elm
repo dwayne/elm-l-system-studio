@@ -8,7 +8,9 @@ import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings
 import Data.Translator as Translator
 import Html as H
+import Html.Attributes as HA
 import View.Canvas as Canvas
+import Lib.Sequence as Sequence
 
 
 main : Program () Model Msg
@@ -39,16 +41,19 @@ init =
 
         axiom =
             "F++F++F"
+            --"FF"
 
         chars =
-            Generator.generate 4 rules axiom
+            Generator.generate 6 rules axiom
+            --Generator.generate 0 rules axiom
 
         defaultSettings =
             Settings.default
 
         settings =
             { defaultSettings
-                | startPosition = { x = 350, y = 650 }
+                | startPosition = { x = 300, y = 300 }
+                --, lineLength = 50
                 , lineLength = 6
                 , turningAngle = Angle.fromDegrees 60
             }
@@ -57,9 +62,16 @@ init =
             Translator.translate Dictionary.default settings chars
     in
     always
-        ( { renderer = Renderer.init instructions }
+        ( { renderer =
+                Renderer.init
+                    { fps = 60
+                    , ipf = 100
+                    , instructions = instructions
+                    }
+          }
         , Cmd.none
         )
+        |> Debug.log (Debug.toString <| "length = " ++ String.fromInt (Sequence.length instructions))
 
 
 
@@ -74,15 +86,8 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         ChangedRenderer subMsg ->
-            let
-                ( renderer, cmd ) =
-                    Renderer.update
-                        ChangedRenderer
-                        subMsg
-                        model.renderer
-            in
-            ( { model | renderer = renderer }
-            , cmd
+            ( { model | renderer = Renderer.update ChangedRenderer subMsg model.renderer }
+            , Cmd.none
             )
 
 
@@ -96,10 +101,19 @@ subscriptions model =
 
 
 view : Model -> H.Html msg
-view =
-    always <|
-        Canvas.view
-            { id = "canvas"
-            , width = 1000
-            , height = 1000
+view { renderer } =
+    let
+        { expectedFps, actualFps, cps, commands } =
+            Renderer.toInfo renderer
+    in
+    H.div []
+        [ Canvas.view
+            { width = 800
+            , height = 600
+            , commands = commands
+            , attrs = [ HA.style "border" "1px solid black" ]
             }
+        , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
+        , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
+        , H.p [] [ H.text <| "CPS = " ++ String.fromFloat cps ]
+        ]
