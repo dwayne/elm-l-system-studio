@@ -19,11 +19,11 @@
         node: document.getElementById("app")
       });
 
-      setTimeout(() => {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
 
-        app.ports.drawBatch.subscribe((operations) => {
+      app.ports.drawBatch.subscribe((operations) => {
+        requestAnimationFrame(() => {
           for (const op of operations) {
             switch (op.function) {
               case "moveTo":
@@ -41,7 +41,7 @@
             }
           }
         });
-      }, 0);
+      });
     </script>
   </body>
 </html>

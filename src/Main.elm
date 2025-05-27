@@ -48,7 +48,7 @@ init =
 
         settings =
             { defaultSettings
-                | startPosition = { x = 350, y = 650 }
+                | startPosition = { x = 200, y = 150 }
                 , lineLength = 6
                 , turningAngle = Angle.fromDegrees 60
             }
@@ -57,7 +57,13 @@ init =
             Translator.translate Dictionary.default settings chars
     in
     always
-        ( { renderer = Renderer.init instructions }
+        ( { renderer =
+                Renderer.init
+                    { fps = 60
+                    , ipf = 10
+                    , instructions = instructions
+                    }
+          }
         , Cmd.none
         )
 
@@ -96,10 +102,19 @@ subscriptions model =
 
 
 view : Model -> H.Html msg
-view =
-    always <|
-        Canvas.view
+view { renderer } =
+    let
+        { expectedFps, actualFps, cps, ips, commands } =
+            Renderer.toInfo renderer
+    in
+    H.div []
+        [ Canvas.view
             { id = "canvas"
-            , width = 1000
-            , height = 1000
+            , width = 800
+            , height = 600
             }
+        , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
+        , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
+        , H.p [] [ H.text <| "Calls per second (CPS) = " ++ String.fromFloat cps ]
+        , H.p [] [ H.text <| "Instructions per seconds (IPS) = " ++ String.fromFloat ips ]
+        ]
