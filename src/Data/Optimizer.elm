@@ -1,6 +1,7 @@
-module Data.Optimizer exposing (simplify)
+module Data.Optimizer exposing (SubPath, groupBy, simplify)
 
-import Data.Instruction exposing (Instruction(..))
+import Data.Instruction as Instruction exposing (Instruction(..))
+import Data.Position exposing (Position)
 import Lib.Sequence as Sequence exposing (Sequence(..))
 
 
@@ -85,3 +86,56 @@ justSameX =
 justSameY : Maybe Reason
 justSameY =
     Just SameY
+
+
+type alias SubPath =
+    List Instruction
+
+
+groupBy : Int -> Sequence Instruction -> Sequence SubPath
+groupBy n instructions =
+    if n <= 0 then
+        Empty
+
+    else
+        groupByHelper Nothing [] 0 n instructions
+
+
+groupByHelper : Maybe Position -> List Instruction -> Int -> Int -> Sequence Instruction -> Sequence SubPath
+groupByHelper maybeLastPosition group length n instructions =
+    case instructions of
+        Empty ->
+            if List.isEmpty group then
+                Empty
+
+            else
+                Cons (subPath group) Empty
+
+        Cons head rest ->
+            let
+                nextMaybeLastPosition =
+                    Just (Instruction.endingPosition head)
+            in
+            if length == 0 then
+                case maybeLastPosition of
+                    Nothing ->
+                        groupByHelper nextMaybeLastPosition [ head ] 1 n rest
+
+                    Just lastPosition ->
+                        groupByHelper nextMaybeLastPosition [ head, MoveTo lastPosition ] 2 n rest
+
+            else if length >= n then
+                Cons
+                    (subPath group)
+                    (groupByHelper nextMaybeLastPosition [] 0 n rest)
+
+            else
+                groupByHelper nextMaybeLastPosition (head :: group) (length + 1) n rest
+
+        Thunk t ->
+            Thunk (\_ -> groupByHelper maybeLastPosition group length n (t ()))
+
+
+subPath : List Instruction -> SubPath
+subPath group =
+    List.reverse group

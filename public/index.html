@@ -22,24 +22,26 @@
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
 
-      app.ports.drawBatch.subscribe((operations) => {
+      app.ports.drawBatch.subscribe((subPaths) => {
         requestAnimationFrame(() => {
-          for (const op of operations) {
-            switch (op.function) {
-              case "moveTo":
-                ctx.moveTo(op.x, op.y);
-                break;
+          subPaths.forEach((subPath) => {
+            subPath.forEach((instruction) => {
+              switch (instruction.function) {
+                case "moveTo":
+                  ctx.moveTo(instruction.x, instruction.y);
+                  break;
 
-              case "lineTo":
-                ctx.lineWidth = op.lineWidth;
-                ctx.lineTo(op.x, op.y);
-                ctx.stroke();
-                break;
+                case "lineTo":
+                  ctx.lineWidth = instruction.lineWidth;
+                  ctx.lineTo(instruction.x, instruction.y);
+                  ctx.stroke();
+                  break;
 
-              default:
-                console.log("Unknown operation:", op);
-            }
-          }
+                default:
+                  console.log("Unknown instruction:", instruction);
+              }
+            });
+          });
         });
       });
     </script>

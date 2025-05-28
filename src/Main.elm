@@ -4,6 +4,7 @@ import Browser as B
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
 import Data.Generator as Generator
+import Data.Optimizer as Optimizer
 import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings
 import Data.Translator as Translator
@@ -41,7 +42,7 @@ init =
             "F++F++F"
 
         chars =
-            Generator.generate 4 rules axiom
+            Generator.generate 10 rules axiom
 
         defaultSettings =
             Settings.default
@@ -55,13 +56,21 @@ init =
 
         instructions =
             Translator.translate Dictionary.default settings chars
+
+        numInstructionsPerSubPath =
+            5
+
+        subPaths =
+            instructions
+                |> Optimizer.simplify
+                |> Optimizer.groupBy numInstructionsPerSubPath
     in
     always
         ( { renderer =
                 Renderer.init
                     { fps = 60
-                    , ipf = 10
-                    , instructions = instructions
+                    , spf = 10
+                    , subPaths = subPaths
                     }
           }
         , Cmd.none

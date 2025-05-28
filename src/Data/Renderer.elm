@@ -1,7 +1,8 @@
 port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, toInfo, update)
 
 import Browser.Events as BE
-import Data.Instruction exposing (Instruction(..))
+import Data.Instruction as Instruction exposing (Instruction)
+import Data.Optimizer exposing (SubPath)
 import Data.Timer as Timer exposing (Timer)
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
@@ -13,29 +14,29 @@ type Renderer
 
 type alias State =
     { timer : Timer
-    , ipfAsInt : Int
-    , ipfAsFloat : Float
-    , instructions : Sequence Instruction
-    , totalInstructions : Int
+    , spfAsInt : Int
+    , spfAsFloat : Float
+    , subPaths : Sequence SubPath
+    , totalSubPaths : Int
     , commands : List JE.Value
     }
 
 
 type alias InitOptions =
     { fps : Int
-    , ipf : Int
-    , instructions : Sequence Instruction
+    , spf : Int
+    , subPaths : Sequence SubPath
     }
 
 
 init : InitOptions -> Renderer
-init { fps, ipf, instructions } =
+init { fps, spf, subPaths } =
     Renderer
         { timer = Timer.new fps
-        , ipfAsInt = ipf
-        , ipfAsFloat = toFloat ipf
-        , instructions = instructions
-        , totalInstructions = 0
+        , spfAsInt = spf
+        , spfAsFloat = toFloat spf
+        , subPaths = subPaths
+        , totalSubPaths = 0
         , commands = []
         }
 
@@ -49,7 +50,7 @@ update onChange msg (Renderer state) =
     case msg of
         GotAnimationFrame delta ->
             let
-                ( timer, ( ( instructions, cmd ), numInstructions ) ) =
+                ( timer, ( ( subPaths, cmd ), numSubPaths ) ) =
                     Timer.step
                         delta
                         (\_ ->
@@ -57,46 +58,46 @@ update onChange msg (Renderer state) =
                                 { expectedFps } =
                                     Timer.toInfo state.timer
 
-                                expectedNumInstructions =
-                                    ceiling (expectedFps * state.ipfAsFloat * delta * 0.001)
+                                expectedNumSubPaths =
+                                    ceiling (expectedFps * state.spfAsFloat * delta * 0.001)
 
                                 n =
-                                    max 1 (modBy state.ipfAsInt expectedNumInstructions)
+                                    max 1 (modBy state.spfAsInt expectedNumSubPaths)
                             in
-                            ( render n state.instructions, n )
+                            ( render n state.subPaths, n )
                         )
                         state.timer
 
-                totalInstructions =
-                    state.totalInstructions + numInstructions
+                totalSubPaths =
+                    state.totalSubPaths + numSubPaths
             in
-            ( Renderer { state | timer = timer, instructions = instructions, totalInstructions = totalInstructions }
+            ( Renderer { state | timer = timer, subPaths = subPaths, totalSubPaths = totalSubPaths }
             , cmd
             )
 
 
-render : Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+render : Int -> Sequence SubPath -> ( Sequence SubPath, Cmd msg )
 render =
     renderHelper []
 
 
-renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
-renderHelper values atMost instructions =
+renderHelper : List JE.Value -> Int -> Sequence SubPath -> ( Sequence SubPath, Cmd msg )
+renderHelper values atMost subPaths =
     if atMost > 0 then
-        case Sequence.uncons instructions of
-            Just ( instruction, restInstructions ) ->
+        case Sequence.uncons subPaths of
+            Just ( subPath, restSubPaths ) ->
                 renderHelper
-                    (encode instruction :: values)
+                    (encode subPath :: values)
                     (atMost - 1)
-                    restInstructions
+                    restSubPaths
 
             Nothing ->
-                ( instructions
+                ( subPaths
                 , toCmd values
                 )
 
     else
-        ( instructions
+        ( subPaths
         , toCmd values
         )
 
@@ -113,34 +114,17 @@ toCmd values =
             |> drawBatch
 
 
-encode : Instruction -> JE.Value
-encode instruction =
-    case instruction of
-        MoveTo { x, y } ->
-            JE.object
-                [ ( "function", JE.string "moveTo" )
-                , ( "x", JE.float x )
-                , ( "y", JE.float y )
-                ]
-
-        LineTo { position, lineWidth } ->
-            JE.object
-                [ ( "function", JE.string "lineTo" )
-                , ( "x", JE.float position.x )
-                , ( "y", JE.float position.y )
-                , ( "lineWidth", JE.float lineWidth )
-                ]
-
-        _ ->
-            JE.int 0
+encode : SubPath -> JE.Value
+encode =
+    JE.list Instruction.encode
 
 
 port drawBatch : JE.Value -> Cmd msg
 
 
 subscriptions : (Msg -> msg) -> Renderer -> Sub msg
-subscriptions onChange (Renderer { instructions }) =
-    if Sequence.isEmpty instructions then
+subscriptions onChange (Renderer { subPaths }) =
+    if Sequence.isEmpty subPaths then
         Sub.none
 
     else
@@ -157,7 +141,7 @@ type alias Info =
 
 
 toInfo : Renderer -> Info
-toInfo (Renderer { timer, totalInstructions, commands }) =
+toInfo (Renderer { timer, totalSubPaths, commands }) =
     let
         { expectedFps, totalElapsed, actualFps, cps } =
             Timer.toInfo timer
@@ -170,6 +154,6 @@ toInfo (Renderer { timer, totalInstructions, commands }) =
             0
 
         else
-            1000 * toFloat totalInstructions / totalElapsed
+            1000 * toFloat totalSubPaths / totalElapsed
     , commands = commands
     }

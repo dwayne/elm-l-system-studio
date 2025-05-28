@@ -1,6 +1,7 @@
-module Data.Instruction exposing (Instruction(..))
+module Data.Instruction exposing (Instruction(..), encode, endingPosition)
 
 import Data.Position exposing (Position)
+import Json.Encode as JE
 
 
 type Instruction
@@ -9,28 +10,32 @@ type Instruction
         { position : Position
         , lineWidth : Float
         }
-    | Line
-        { start : Position
-        , end : Position
-        , lineWidth : Float
-        }
 
 
-split : Instruction -> Instruction -> ( Instruction, Maybe Instruction )
-split a b =
-    case ( a, b ) of
-        ( MoveTo _, MoveTo _ ) ->
-            ( b, Nothing )
+endingPosition : Instruction -> Position
+endingPosition instruction =
+    case instruction of
+        MoveTo position ->
+            position
 
-        ( MoveTo start, LineTo line ) ->
-            ( Line { start = start, end = line.position, lineWidth = line.lineWidth }
-            , Nothing
-            )
+        LineTo { position } ->
+            position
 
-        ( LineTo l1, LineTo l2 ) ->
-            ( a
-            , Just (Line { start = l1.position, end = l2.position, lineWidth = l2.lineWidth })
-            )
 
-        _ ->
-            ( a, Just b )
+encode : Instruction -> JE.Value
+encode instruction =
+    case instruction of
+        MoveTo { x, y } ->
+            JE.object
+                [ ( "function", JE.string "moveTo" )
+                , ( "x", JE.float x )
+                , ( "y", JE.float y )
+                ]
+
+        LineTo { position, lineWidth } ->
+            JE.object
+                [ ( "function", JE.string "lineTo" )
+                , ( "x", JE.float position.x )
+                , ( "y", JE.float position.y )
+                , ( "lineWidth", JE.float lineWidth )
+                ]
