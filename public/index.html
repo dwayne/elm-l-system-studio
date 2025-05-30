@@ -15,6 +15,34 @@
     <div id="app"></div>
     <script src="./app.js"></script>
     <script>
+      function initCanvas(canvas, ctx) {
+        //
+        // Set dimensions
+        //
+        const width = Number(canvas.getAttribute("width"));
+        const height = Number(canvas.getAttribute("height"));
+
+        const dpr = 2 * (window.devicePixelRatio || 1);
+
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        canvas.width = width * dpr;
+        canvas.height = height * dpr;
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+
+        //
+        // Disable image smoothing
+        //
+        ctx.imageSmoothingEnabled = false;
+
+        //
+        // Set the line color
+        //
+        ctx.strokeStyle = "rgb(80 80 80)";
+      }
+
       const app = Elm.Main.init({
         node: document.getElementById("app")
       });
@@ -22,9 +50,13 @@
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
 
+      initCanvas(canvas, ctx);
+
       app.ports.drawBatch.subscribe((operations) => {
         requestAnimationFrame(() => {
           for (const op of operations) {
+            console.log(op);
+
             switch (op.function) {
               case "moveTo":
                 ctx.moveTo(op.x, op.y);

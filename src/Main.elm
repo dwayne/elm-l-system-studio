@@ -4,6 +4,7 @@ import Browser as B
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
 import Data.Generator as Generator
+import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings
 import Data.Translator as Translator
@@ -19,6 +20,27 @@ main =
         , view = view
         , subscriptions = subscriptions
         }
+
+
+
+-- CONSTANTS
+
+
+windowPosition : Position
+windowPosition =
+    { x = -125
+    , y = -300
+    }
+
+
+windowSize : Float
+windowSize =
+    1000
+
+
+canvasSize : Int
+canvasSize =
+    500
 
 
 
@@ -41,15 +63,15 @@ init =
             "F++F++F"
 
         chars =
-            Generator.generate 4 rules axiom
+            Generator.generate 6 rules axiom
 
         defaultSettings =
             Settings.default
 
         settings =
             { defaultSettings
-                | startPosition = { x = 200, y = 150 }
-                , lineLength = 6
+                | startPosition = { x = 0, y = 0 }
+                , lineLength = 1
                 , turningAngle = Angle.fromDegrees 60
             }
 
@@ -60,7 +82,7 @@ init =
         ( { renderer =
                 Renderer.init
                     { fps = 60
-                    , ipf = 10
+                    , ipf = 100
                     , instructions = instructions
                     }
           }
@@ -83,7 +105,12 @@ update msg model =
             let
                 ( renderer, cmd ) =
                     Renderer.update
-                        ChangedRenderer
+                        { renderingOptions =
+                            { windowPosition = windowPosition
+                            , windowSize = windowSize
+                            , canvasSize = toFloat canvasSize
+                            }
+                        }
                         subMsg
                         model.renderer
             in
@@ -110,8 +137,8 @@ view { renderer } =
     H.div []
         [ Canvas.view
             { id = "canvas"
-            , width = 800
-            , height = 600
+            , width = canvasSize
+            , height = canvasSize
             }
         , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
         , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
