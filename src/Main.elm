@@ -7,6 +7,7 @@ import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings
+import Data.Transformer as Transformer
 import Data.Translator as Translator
 import Html as H
 import View.Canvas as Canvas
@@ -24,18 +25,6 @@ main =
 
 
 -- CONSTANTS
-
-
-windowPosition : Position
-windowPosition =
-    { x = -250
-    , y = -250
-    }
-
-
-windowSize : Float
-windowSize =
-    500
 
 
 canvasSize : Int
@@ -74,8 +63,16 @@ init =
                 , turningAngle = Angle.fromDegrees 90
             }
 
+        transformOptions =
+            { windowPosition = { x = -250, y = -250 }
+            , windowSize = 500
+            , canvasSize = canvasSize
+            }
+
         instructions =
-            Translator.translate Dictionary.default settings chars
+            chars
+                |> Translator.translate Dictionary.default settings
+                |> Transformer.transform transformOptions
     in
     always
         ( { renderer =
@@ -103,15 +100,7 @@ update msg model =
         ChangedRenderer subMsg ->
             let
                 ( renderer, cmd ) =
-                    Renderer.update
-                        { renderingOptions =
-                            { windowPosition = windowPosition
-                            , windowSize = windowSize
-                            , canvasSize = toFloat canvasSize
-                            }
-                        }
-                        subMsg
-                        model.renderer
+                    Renderer.update subMsg model.renderer
             in
             ( { model | renderer = renderer }
             , cmd

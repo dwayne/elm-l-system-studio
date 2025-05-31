@@ -3,9 +3,9 @@ module Test.Data.Optimizer exposing (suite)
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
 import Data.Generator as Generator
-import Data.Instruction exposing (Instruction(..))
 import Data.Optimizer as Optimizer
 import Data.Settings as Settings exposing (Settings)
+import Data.Transformer as Transformer exposing (Instruction(..))
 import Data.Translator as Translator
 import Expect
 import Lib.Sequence as Sequence
@@ -19,6 +19,7 @@ suite =
             \_ ->
                 Sequence.fromString "fffff"
                     |> Translator.translate Dictionary.default defaultSettings
+                    |> Transformer.transform transformOptions
                     |> Optimizer.simplify
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo { x = 5, y = 0 } ]
@@ -26,6 +27,7 @@ suite =
             \_ ->
                 Sequence.fromString "FFFFF"
                     |> Translator.translate Dictionary.default defaultSettings
+                    |> Transformer.transform transformOptions
                     |> Optimizer.simplify
                     |> Sequence.toList
                     |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 5, y = 0 }, lineWidth = 1 } ]
@@ -37,9 +39,10 @@ suite =
                 in
                 Sequence.fromString "FFFFF"
                     |> Translator.translate Dictionary.default settings
+                    |> Transformer.transform transformOptions
                     |> Optimizer.simplify
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 0, y = 5 }, lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 0, y = -5 }, lineWidth = 1 } ]
         , test "LineTo followed by LineTo (equal y-coordinates followed by equal x-coordinates)" <|
             \_ ->
                 let
@@ -48,12 +51,13 @@ suite =
                 in
                 Sequence.fromString "FFFFF+FFFFF"
                     |> Translator.translate Dictionary.default settings
+                    |> Transformer.transform transformOptions
                     |> Optimizer.simplify
                     |> Sequence.toList
                     |> Expect.equal
                         [ MoveTo { x = 0, y = 0 }
                         , LineTo { position = { x = 5, y = 0 }, lineWidth = 1 }
-                        , LineTo { position = { x = 5, y = 5 }, lineWidth = 1 }
+                        , LineTo { position = { x = 5, y = -5 }, lineWidth = 1 }
                         ]
         , test "LineTo followed by LineTo (equal x-coordinates followed by equal y-coordinates)" <|
             \_ ->
@@ -63,12 +67,13 @@ suite =
                 in
                 Sequence.fromString "FFFFF+FFFFF"
                     |> Translator.translate Dictionary.default settings
+                    |> Transformer.transform transformOptions
                     |> Optimizer.simplify
                     |> Sequence.toList
                     |> Expect.equal
                         [ MoveTo { x = 0, y = 0 }
-                        , LineTo { position = { x = 0, y = 5 }, lineWidth = 1 }
-                        , LineTo { position = { x = -5, y = 5 }, lineWidth = 1 }
+                        , LineTo { position = { x = 0, y = -5 }, lineWidth = 1 }
+                        , LineTo { position = { x = -5, y = -5 }, lineWidth = 1 }
                         ]
         , test "A general example" <|
             \_ ->
@@ -82,6 +87,8 @@ suite =
                     settings =
                         { defaultSettings | turningAngle = Angle.right }
                 in
+                --
+                -- TODO: Check what the actual values are now.
                 --
                 -- [ MoveTo { x = 0, y = 0 }
                 --
@@ -136,6 +143,7 @@ suite =
                 --
                 Generator.generate 1 rules axiom
                     |> Translator.translate Dictionary.default settings
+                    |> Transformer.transform transformOptions
                     --|> Debug.log "translate"
                     --|> inspect Sequence.toList
                     |> Optimizer.simplify
@@ -149,6 +157,18 @@ suite =
 defaultSettings : Settings
 defaultSettings =
     Settings.default
+
+
+transformOptions : Transformer.TransformOptions
+transformOptions =
+    let
+        s =
+            10
+    in
+    { windowPosition = { x = 0, y = -s }
+    , windowSize = s
+    , canvasSize = s
+    }
 
 
 inspect : (a -> b) -> a -> a

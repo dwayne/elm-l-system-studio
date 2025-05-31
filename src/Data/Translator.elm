@@ -1,11 +1,19 @@
-module Data.Translator exposing (translate)
+module Data.Translator exposing (Instruction(..), translate)
 
 import Data.Angle as Angle exposing (Angle)
 import Data.Dictionary as Dictionary exposing (Dictionary, Meaning(..))
-import Data.Instruction exposing (Instruction(..))
+import Data.Position exposing (Position)
 import Data.Settings exposing (Settings)
 import Data.Turtle as Turtle exposing (Turtle)
 import Lib.Sequence as Sequence exposing (Sequence)
+
+
+type Instruction
+    = MoveTo Position
+    | LineTo
+        { position : Position
+        , lineWidth : Float
+        }
 
 
 translate : Dictionary -> Settings -> Sequence Char -> Sequence Instruction

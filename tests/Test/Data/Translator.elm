@@ -2,9 +2,8 @@ module Test.Data.Translator exposing (suite)
 
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
-import Data.Instruction exposing (Instruction(..))
 import Data.Settings as Settings exposing (Settings)
-import Data.Translator as Translator
+import Data.Translator as Translator exposing (Instruction(..))
 import Expect
 import Lib.Sequence as Sequence
 import Test exposing (Test, describe, test)

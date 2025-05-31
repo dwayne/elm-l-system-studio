@@ -8,6 +8,7 @@ module Lib.Sequence exposing
     , fromString
     , isEmpty
     , length
+    , map
     , singleton
     , toList
     , uncons
@@ -113,6 +114,19 @@ lengthHelper n s =
 
 
 -- CONVERT
+
+
+map : (a -> b) -> Sequence a -> Sequence b
+map f s =
+    case s of
+        Empty ->
+            Empty
+
+        Cons head tail ->
+            Cons (f head) (map f tail)
+
+        Thunk t ->
+            Thunk (\_ -> map f (t ()))
 
 
 filterMapWithState : (a -> state -> ( Maybe b, state )) -> state -> Sequence a -> Sequence b

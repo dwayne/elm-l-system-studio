@@ -1,6 +1,6 @@
 module Data.Optimizer exposing (simplify)
 
-import Data.Instruction exposing (Instruction(..))
+import Data.Transformer exposing (Instruction(..))
 import Lib.Sequence as Sequence exposing (Sequence(..))
 
 

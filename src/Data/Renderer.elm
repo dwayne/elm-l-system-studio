@@ -1,9 +1,9 @@
 port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, toInfo, update)
 
 import Browser.Events as BE
-import Data.Instruction exposing (Instruction(..))
 import Data.Position exposing (Position)
 import Data.Timer as Timer exposing (Timer)
+import Data.Transformer as Transformer exposing (Instruction(..))
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
 
@@ -45,20 +45,8 @@ type Msg
     = GotAnimationFrame Float
 
 
-type alias UpdateOptions =
-    { renderingOptions : RenderingOptions
-    }
-
-
-type alias RenderingOptions =
-    { windowPosition : Position
-    , windowSize : Float
-    , canvasSize : Float
-    }
-
-
-update : UpdateOptions -> Msg -> Renderer -> ( Renderer, Cmd msg )
-update { renderingOptions } msg (Renderer state) =
+update : Msg -> Renderer -> ( Renderer, Cmd msg )
+update msg (Renderer state) =
     case msg of
         GotAnimationFrame delta ->
             let
@@ -76,7 +64,7 @@ update { renderingOptions } msg (Renderer state) =
                                 n =
                                     max 1 (modBy state.ipfAsInt expectedNumInstructions)
                             in
-                            ( render renderingOptions n state.instructions, n )
+                            ( render n state.instructions, n )
                         )
                         state.timer
 
@@ -88,19 +76,18 @@ update { renderingOptions } msg (Renderer state) =
             )
 
 
-render : RenderingOptions -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+render : Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
 render =
     renderHelper []
 
 
-renderHelper : List JE.Value -> RenderingOptions -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
-renderHelper values renderingOptions atMost instructions =
+renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+renderHelper values atMost instructions =
     if atMost > 0 then
         case Sequence.uncons instructions of
             Just ( instruction, restInstructions ) ->
                 renderHelper
-                    (encode renderingOptions instruction :: values)
-                    renderingOptions
+                    (Transformer.encode instruction :: values)
                     (atMost - 1)
                     restInstructions
 
@@ -125,68 +112,6 @@ toCmd values =
             |> List.reverse
             |> JE.list identity
             |> drawBatch
-
-
-encode : RenderingOptions -> Instruction -> JE.Value
-encode renderingOptions instruction =
-    case instruction of
-        MoveTo position ->
-            let
-                { x, y } =
-                    toCanvasCoords renderingOptions position
-            in
-            JE.object
-                [ ( "function", JE.string "moveTo" )
-                , ( "x", JE.int x )
-                , ( "y", JE.int y )
-                ]
-
-        LineTo { position, lineWidth } ->
-            let
-                { x, y } =
-                    toCanvasCoords renderingOptions position
-            in
-            JE.object
-                [ ( "function", JE.string "lineTo" )
-                , ( "x", JE.int x )
-                , ( "y", JE.int y )
-                , ( "lineWidth", JE.float lineWidth )
-                ]
-
-        _ ->
-            JE.int 0
-
-
-type alias Coords =
-    { x : Int
-    , y : Int
-    }
-
-
-toCanvasCoords : RenderingOptions -> Position -> Coords
-toCanvasCoords { windowPosition, windowSize, canvasSize } position =
-    let
-        x0 =
-            windowPosition.x
-
-        y0 =
-            windowPosition.y
-
-        s =
-            windowSize
-
-        l =
-            canvasSize
-
-        xw =
-            position.x
-
-        yw =
-            position.y
-    in
-    { x = round ((xw - x0) * l / s)
-    , y = round (l - (yw - y0) * l / s)
-    }
 
 
 port drawBatch : JE.Value -> Cmd msg
