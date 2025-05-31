@@ -28,14 +28,14 @@ main =
 
 windowPosition : Position
 windowPosition =
-    { x = -125
-    , y = -300
+    { x = -250
+    , y = -250
     }
 
 
 windowSize : Float
 windowSize =
-    1000
+    500
 
 
 canvasSize : Int
@@ -56,23 +56,22 @@ init : () -> ( Model, Cmd msg )
 init =
     let
         rules =
-            [ ( 'F', "F-F++F-F" )
-            ]
+            [ ( 'F', "F+F-F-FF+F+F-F" ) ]
 
         axiom =
-            "F++F++F"
+            "F+F+F+F"
 
         chars =
-            Generator.generate 6 rules axiom
+            Generator.generate 3 rules axiom
 
         defaultSettings =
             Settings.default
 
         settings =
             { defaultSettings
-                | startPosition = { x = 0, y = 0 }
-                , lineLength = 1
-                , turningAngle = Angle.fromDegrees 60
+                | startPosition = { x = -100, y = -100 }
+                , lineLength = 5
+                , turningAngle = Angle.fromDegrees 90
             }
 
         instructions =
@@ -81,8 +80,8 @@ init =
     always
         ( { renderer =
                 Renderer.init
-                    { fps = 60
-                    , ipf = 100
+                    { fps = 30
+                    , ipf = 10
                     , instructions = instructions
                     }
           }
