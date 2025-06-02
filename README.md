@@ -33,9 +33,14 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 250, y = 750 }
-        , lineLength = 5
+        | lineLength = 1
         , turningAngle = Angle.fromDegrees 90
+    }
+
+transformOptions =
+    { windowPosition = { x = -25, y = -25 }
+    , windowSize = 100
+    , canvasSize = canvasSize
     }
 ```
 
@@ -56,9 +61,14 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 500, y = 500 }
-        , lineLength = 10
+        | lineLength = 10
         , turningAngle = Angle.fromDegrees 90
+    }
+
+transformOptions =
+    { windowPosition = { x = -200, y = -150 }
+    , windowSize = 250
+    , canvasSize = canvasSize
     }
 ```
 
@@ -81,10 +91,16 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 500, y = 750 }
-        , startHeading = Angle.fromDegrees 270
-        , lineLength = 3
+        | startHeading = Angle.fromDegrees 90
+        , lineLength = 1
+        , lineWidth = 1
         , turningAngle = Angle.fromDegrees 22.5
+    }
+
+transformOptions =
+    { windowPosition = { x = -25, y = 50 }
+    , windowSize = 50
+    , canvasSize = canvasSize
     }
 ```
 
@@ -110,11 +126,16 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 500, y = 750 }
-        , startHeading = Angle.fromDegrees 270
+        | startHeading = Angle.fromDegrees 90
         , lineLength = 1
         , lineLengthScaleFactor = 1.36
         , turningAngle = Angle.fromDegrees 45
+    }
+
+transformOptions =
+    { windowPosition = { x = -300, y = 20 }
+    , windowSize = 500
+    , canvasSize = canvasSize
     }
 ```
 
@@ -129,16 +150,21 @@ axiom =
     "F+F+F+F"
 
 chars =
-    Generator.generate 4 rules axiom
+    Generator.generate 5 rules axiom
 
 defaultSettings =
     Settings.default
 
 settings =
     { defaultSettings
-        | startPosition = { x = 250, y = 750 }
-        , lineLength = 5
+        | lineLength = 5
         , turningAngle = Angle.fromDegrees 90
+    }
+
+transformOptions =
+    { windowPosition = { x = -10, y = -10 }
+    , windowSize = 1250
+    , canvasSize = canvasSize
     }
 ```
 
@@ -161,10 +187,15 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 500, y = 750 }
-        , startHeading = Angle.fromDegrees 270
+        | startHeading = Angle.fromDegrees 90
         , lineLength = 5
         , turningAngle = Angle.fromDegrees 90
+    }
+
+transformOptions =
+    { windowPosition = { x = -400, y = 0 }
+    , windowSize = 400
+    , canvasSize = canvasSize
     }
 ```
 
@@ -179,16 +210,21 @@ axiom =
     "F"
 
 chars =
-    Generator.generate 5 rules axiom
+    Generator.generate 4 rules axiom
 
 defaultSettings =
     Settings.default
 
 settings =
     { defaultSettings
-        | startPosition = { x = 150, y = 500 }
-        , lineLength = 3
+        | lineLength = 3
         , turningAngle = Angle.fromDegrees 90
+    }
+
+transformOptions =
+    { windowPosition = { x = 0, y = -175 }
+    , windowSize = 250
+    , canvasSize = canvasSize
     }
 ```
 
@@ -210,8 +246,13 @@ defaultSettings =
 
 settings =
     { defaultSettings
-        | startPosition = { x = 350, y = 650 }
-        , lineLength = 6
+        | lineLength = 6
         , turningAngle = Angle.fromDegrees 60
+    }
+
+transformOptions =
+    { windowPosition = { x = -50, y = -150 }
+    , windowSize = 600
+    , canvasSize = canvasSize
     }
 ```
