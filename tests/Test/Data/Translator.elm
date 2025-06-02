@@ -17,7 +17,7 @@ suite =
                 Sequence.fromString "F"
                     |> Translator.translate Dictionary.default defaultSettings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 2 } ]
         , test "Example 2" <|
             \_ ->
                 Sequence.fromString "f"
@@ -93,7 +93,7 @@ suite =
                 Sequence.fromString "[f]F"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 }, MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 1 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, MoveTo { x = 1, y = 0 }, MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 2 } ]
         , test "Example 10" <|
             \_ ->
                 let
@@ -103,7 +103,7 @@ suite =
                 Sequence.fromString "###!F"
                     |> Translator.translate Dictionary.default settings
                     |> Sequence.toList
-                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 3 } ]
+                    |> Expect.equal [ MoveTo { x = 0, y = 0 }, LineTo { position = { x = 1, y = 0 }, lineWidth = 4 } ]
         , test "Example 11" <|
             \_ ->
                 let

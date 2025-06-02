@@ -51,21 +51,20 @@ init =
             "F+F+F+F"
 
         chars =
-            Generator.generate 1 rules axiom
+            Generator.generate 3 rules axiom
 
         defaultSettings =
             Settings.default
 
         settings =
             { defaultSettings
-                | startPosition = { x = -1, y = -1 }
-                , lineLength = 1
+                | lineLength = 1
                 , turningAngle = Angle.fromDegrees 90
             }
 
         transformOptions =
-            { windowPosition = { x = -5, y = -5 }
-            , windowSize = 10
+            { windowPosition = { x = -25, y = -25 }
+            , windowSize = 100
             , canvasSize = canvasSize
             }
 
