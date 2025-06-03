@@ -5,15 +5,15 @@ import Data.Angle as Angle
 import Data.Dictionary as Dictionary
 import Data.Generator as Generator
 import Data.Position exposing (Position)
-import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings
-import Data.Transformer as Transformer
-import Data.Translator as Translator
+import Data.SvgRenderer as Renderer exposing (Renderer)
+import Data.SvgTransformer as Transformer
+import Data.SvgTranslator as Translator
 import Html as H
 import View.Canvas as Canvas
 
 
-main : Program () Model Msg
+main : Program () (Model Msg) Msg
 main =
     B.element
         { init = init
@@ -36,12 +36,12 @@ canvasSize =
 -- MODEL
 
 
-type alias Model =
-    { renderer : Renderer
+type alias Model msg =
+    { renderer : Renderer msg
     }
 
 
-init : () -> ( Model, Cmd msg )
+init : () -> ( Model msg, Cmd msg )
 init =
     let
         rules =
@@ -51,7 +51,7 @@ init =
             "F+F+F+F"
 
         chars =
-            Generator.generate 3 rules axiom
+            Generator.generate 6 rules axiom
 
         defaultSettings =
             Settings.default
@@ -93,20 +93,20 @@ type Msg
     = ChangedRenderer Renderer.Msg
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model msg -> ( Model msg, Cmd msg )
 update msg model =
     case msg of
         ChangedRenderer subMsg ->
             let
-                ( renderer, cmd ) =
+                renderer =
                     Renderer.update subMsg model.renderer
             in
             ( { model | renderer = renderer }
-            , cmd
+            , Cmd.none
             )
 
 
-subscriptions : Model -> Sub Msg
+subscriptions : Model Msg -> Sub Msg
 subscriptions model =
     Renderer.subscriptions ChangedRenderer model.renderer
 
@@ -115,17 +115,17 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> H.Html msg
+view : Model msg -> H.Html msg
 view { renderer } =
     let
-        { expectedFps, actualFps, cps, ips, commands } =
+        { expectedFps, actualFps, cps, ips } =
             Renderer.toInfo renderer
     in
     H.div []
-        [ Canvas.view
-            { id = "canvas"
-            , width = canvasSize
+        [ Renderer.view
+            { width = canvasSize
             , height = canvasSize
+            , renderer = renderer
             }
         , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
         , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]

@@ -15,51 +15,8 @@
     <div id="app"></div>
     <script src="./app.js"></script>
     <script>
-      function setCanvasDimensions(canvas, ctx) {
-        const width = Number(canvas.getAttribute("width"));
-        const height = Number(canvas.getAttribute("height"));
-
-        const dpr = window.devicePixelRatio || 1;
-
-        canvas.style.width = width + "px";
-        canvas.style.height = height + "px";
-        canvas.width = width * dpr;
-        canvas.height = height * dpr;
-
-        ctx.setTransform(1, 0, 0, 1, 0, 0);
-        ctx.scale(dpr, dpr);
-      }
-
       const app = Elm.Main.init({
         node: document.getElementById("app")
-      });
-
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
-
-      setCanvasDimensions(canvas, ctx);
-
-      app.ports.drawBatch.subscribe((operations) => {
-        requestAnimationFrame(() => {
-          for (const op of operations) {
-            console.log(op);
-
-            switch (op.function) {
-              case "moveTo":
-                ctx.moveTo(op.x, op.y);
-                break;
-
-              case "lineTo":
-                ctx.lineWidth = op.lineWidth;
-                ctx.lineTo(op.x, op.y);
-                ctx.stroke();
-                break;
-
-              default:
-                console.log("Unknown operation:", op);
-            }
-          }
-        });
       });
     </script>
   </body>
