@@ -50,8 +50,9 @@ type alias Config =
 
 type Instruction
     = MoveTo Coords
-    | LineTo
-        { position : Coords
+    | Line
+        { start : Coords
+        , end : Coords
         , lineWidth : Float
         }
 
@@ -68,9 +69,10 @@ transformInstruction toCoords instruction =
         Translator.MoveTo position ->
             MoveTo (toCoords position)
 
-        Translator.LineTo { position, lineWidth } ->
-            LineTo
-                { position = toCoords position
+        Translator.Line { start, end, lineWidth } ->
+            Line
+                { start = toCoords start
+                , end = toCoords end
                 , lineWidth = lineWidth
                 }
 
@@ -94,19 +96,16 @@ encode instruction =
     case instruction of
         MoveTo { x, y } ->
             JE.object
-                [ ( "function", JE.string "moveTo" )
+                [ ( "tag", JE.string "moveTo" )
                 , ( "x", JE.int x )
                 , ( "y", JE.int y )
                 ]
 
-        LineTo { position, lineWidth } ->
-            let
-                { x, y } =
-                    position
-            in
+        Line { start, end, lineWidth } ->
             JE.object
-                [ ( "function", JE.string "lineTo" )
-                , ( "x", JE.int x )
-                , ( "y", JE.int y )
-                , ( "lineWidth", JE.float lineWidth )
+                [ ( "tag", JE.string "line" )
+                , ( "x1", JE.int start.x )
+                , ( "y1", JE.int start.y )
+                , ( "x2", JE.int end.x )
+                , ( "y2", JE.int end.y )
                 ]

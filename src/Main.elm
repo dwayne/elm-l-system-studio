@@ -76,8 +76,8 @@ init =
     always
         ( { renderer =
                 Renderer.init
-                    { fps = 30
-                    , ipf = 10
+                    { fps = 60
+                    , ipf = 100
                     , instructions = instructions
                     }
           }

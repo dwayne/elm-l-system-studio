@@ -10,8 +10,9 @@ import Lib.Sequence as Sequence exposing (Sequence)
 
 type Instruction
     = MoveTo Position
-    | LineTo
-        { position : Position
+    | Line
+        { start : Position
+        , end : Position
         , lineWidth : Float
         }
 
@@ -21,24 +22,18 @@ translate dictionary settings chars =
     let
         startState =
             initState settings
-
-        head =
-            MoveTo startState.turtle.position
-
-        tail =
-            Sequence.filterMapWithState
-                (\ch state ->
-                    case Dictionary.find ch dictionary of
-                        Just meaning ->
-                            translateMeaning settings meaning state
-
-                        Nothing ->
-                            ( Nothing, state )
-                )
-                startState
-                chars
     in
-    Sequence.cons head tail
+    Sequence.filterMapWithState
+        (\ch state ->
+            case Dictionary.find ch dictionary of
+                Just meaning ->
+                    translateMeaning settings meaning state
+
+                Nothing ->
+                    ( Nothing, state )
+        )
+        startState
+        chars
 
 
 translateMeaning : Settings -> Meaning -> State -> ( Maybe Instruction, State )
@@ -49,7 +44,7 @@ translateMeaning settings meaning state =
                 turtle =
                     Turtle.walk state.lineLength state.turtle
             in
-            ( Just (LineTo { position = turtle.position, lineWidth = state.lineWidth })
+            ( Just (Line { start = state.turtle.position, end = turtle.position, lineWidth = state.lineWidth })
             , { state | turtle = turtle }
             )
 

@@ -38,27 +38,37 @@
       const ctx = canvas.getContext("2d");
 
       setCanvasDimensions(canvas, ctx);
+      ctx.lineWidth = 2; // for now, we'd set the lineWidth here
 
       app.ports.drawBatch.subscribe((operations) => {
         requestAnimationFrame(() => {
-          for (const op of operations) {
+          ctx.beginPath();
+
+          const firstOp = operations[0];
+          if (firstOp && firstOp.tag === "line") {
+            console.log("firstOp = ", firstOp);
+
+            ctx.moveTo(firstOp.x1, firstOp.y1);
+          }
+
+          operations.forEach((op) => {
             console.log(op);
 
-            switch (op.function) {
+            switch (op.tag) {
               case "moveTo":
                 ctx.moveTo(op.x, op.y);
                 break;
 
-              case "lineTo":
-                ctx.lineWidth = op.lineWidth;
-                ctx.lineTo(op.x, op.y);
-                ctx.stroke();
+              case "line":
+                ctx.lineTo(op.x2, op.y2);
                 break;
 
               default:
                 console.log("Unknown operation:", op);
             }
-          }
+          });
+
+          ctx.stroke();
         });
       });
     </script>
