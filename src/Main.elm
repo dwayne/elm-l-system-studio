@@ -3,10 +3,10 @@ module Main exposing (main)
 import Browser as B
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
+import Data.DivRenderer as Renderer exposing (Renderer)
 import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Settings as Settings
-import Data.SvgRenderer as Renderer exposing (Renderer)
 import Data.SvgTransformer as Transformer
 import Data.SvgTranslator as Translator
 import Html as H
@@ -75,11 +75,13 @@ init =
     in
     always
         ( { renderer =
+                --Renderer.init
+                --    { fps = 30
+                --    , ipf = 10
+                --    , instructions = instructions
+                --    }
+                --Renderer.init instructions
                 Renderer.init
-                    { fps = 30
-                    , ipf = 10
-                    , instructions = instructions
-                    }
           }
         , Cmd.none
         )
@@ -117,18 +119,20 @@ subscriptions model =
 
 view : Model msg -> H.Html msg
 view { renderer } =
-    let
-        { expectedFps, actualFps, cps, ips } =
-            Renderer.toInfo renderer
-    in
+    --let
+    --    { expectedFps, actualFps, cps, ips } =
+    --        Renderer.toInfo renderer
+    --in
     H.div []
-        [ Renderer.view
-            { width = canvasSize
-            , height = canvasSize
-            , renderer = renderer
-            }
-        , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
-        , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
-        , H.p [] [ H.text <| "Calls per second (CPS) = " ++ String.fromFloat cps ]
-        , H.p [] [ H.text <| "Instructions per seconds (IPS) = " ++ String.fromFloat ips ]
+        --[ Renderer.view
+        --    { width = canvasSize
+        --    , height = canvasSize
+        --    , renderer = renderer
+        --    }
+        [ Renderer.view { renderer = renderer }
+
+        --, H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
+        --, H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
+        --, H.p [] [ H.text <| "Calls per second (CPS) = " ++ String.fromFloat cps ]
+        --, H.p [] [ H.text <| "Instructions per seconds (IPS) = " ++ String.fromFloat ips ]
         ]

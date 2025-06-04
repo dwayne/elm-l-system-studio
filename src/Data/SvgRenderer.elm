@@ -3,11 +3,11 @@ module Data.SvgRenderer exposing (Msg, Renderer, init, subscriptions, toInfo, up
 import Browser.Events as BE
 import Data.SvgTransformer as Transformer exposing (Instruction(..))
 import Data.Timer as Timer exposing (Timer)
+import Html as H
 import Lib.Sequence as Sequence exposing (Sequence)
 import Svg as S
 import Svg.Attributes as SA
 import Svg.Keyed as SK
-import Html as H
 
 
 type Renderer msg
