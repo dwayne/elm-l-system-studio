@@ -98,8 +98,8 @@ settings =
     }
 
 transformOptions =
-    { windowPosition = { x = -25, y = 50 }
-    , windowSize = 50
+    { windowPosition = { x = -100, y = -20 }
+    , windowSize = 200
     , canvasSize = canvasSize
     }
 ```
@@ -133,8 +133,8 @@ settings =
     }
 
 transformOptions =
-    { windowPosition = { x = -300, y = 20 }
-    , windowSize = 500
+    { windowPosition = { x = -300, y = -10 }
+    , windowSize = 600
     , canvasSize = canvasSize
     }
 ```
@@ -162,8 +162,8 @@ settings =
     }
 
 transformOptions =
-    { windowPosition = { x = -10, y = -10 }
-    , windowSize = 1250
+    { windowPosition = { x = -125, y = -125 }
+    , windowSize = 1500
     , canvasSize = canvasSize
     }
 ```
@@ -193,8 +193,8 @@ settings =
     }
 
 transformOptions =
-    { windowPosition = { x = -400, y = 0 }
-    , windowSize = 400
+    { windowPosition = { x = -405, y = -5 }
+    , windowSize = 410
     , canvasSize = canvasSize
     }
 ```
@@ -210,7 +210,7 @@ axiom =
     "F"
 
 chars =
-    Generator.generate 4 rules axiom
+    Generator.generate 5 rules axiom
 
 defaultSettings =
     Settings.default
@@ -222,8 +222,8 @@ settings =
     }
 
 transformOptions =
-    { windowPosition = { x = 0, y = -175 }
-    , windowSize = 250
+    { windowPosition = { x = -10, y = -500 }
+    , windowSize = 750
     , canvasSize = canvasSize
     }
 ```
