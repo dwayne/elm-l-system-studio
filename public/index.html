@@ -7,7 +7,7 @@
     <title>L-System Studio</title>
     <style>
       .canvas {
-        border: 2px solid black;
+        border: 1px solid black;
       }
     </style>
   </head>
@@ -38,7 +38,9 @@
       const ctx = canvas.getContext("2d");
 
       setCanvasDimensions(canvas, ctx);
-      ctx.lineWidth = 2; // for now, we'd set the lineWidth here
+
+      ctx.translate(0.5, 0.5)
+      ctx.lineWidth = 1;
 
       app.ports.drawBatch.subscribe((operations) => {
         requestAnimationFrame(() => {
