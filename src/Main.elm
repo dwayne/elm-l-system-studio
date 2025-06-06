@@ -6,7 +6,7 @@ import Data.Dictionary as Dictionary
 import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
-import Data.Transformer as Transformer
+import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
 import Html as H
 import Json.Encode as JE
@@ -37,7 +37,7 @@ canvasSize =
 
 
 type alias Model =
-    { renderer : Renderer
+    { renderer : Renderer Instruction
     }
 
 
@@ -99,7 +99,7 @@ update msg model =
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
-                    Renderer.update subMsg model.renderer
+                    Renderer.update Transformer.encode subMsg model.renderer
             in
             ( { model | renderer = renderer }
             , draw commands

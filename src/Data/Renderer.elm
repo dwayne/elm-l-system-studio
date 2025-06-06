@@ -1,33 +1,32 @@
 module Data.Renderer exposing (Msg, Renderer, handleAnimationFrame, init, subscriptions, toStats, update)
 
 import Browser.Events as BE
-import Data.Transformer as Transformer exposing (Instruction)
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
 import Lib.Timer as Timer exposing (Timer)
 
 
-type Renderer
-    = Renderer State
+type Renderer instruction
+    = Renderer (State instruction)
 
 
-type alias State =
+type alias State instruction =
     { timer : Timer
     , ipfAsInt : Int
     , ipfAsFloat : Float
-    , instructions : Sequence Instruction
+    , instructions : Sequence instruction
     , totalInstructionsRendered : Int
     }
 
 
-type alias InitOptions =
+type alias InitOptions instruction =
     { fps : Int
     , ipf : Int -- instructions per frame
-    , instructions : Sequence Instruction
+    , instructions : Sequence instruction
     }
 
 
-init : InitOptions -> Renderer
+init : InitOptions instruction -> Renderer instruction
 init { fps, ipf, instructions } =
     let
         ipfAsInt =
@@ -46,26 +45,20 @@ type Msg
     = GotAnimationFrame Float
 
 
-update : Msg -> Renderer -> ( Renderer, JE.Value )
-update msg (Renderer state) =
+update : (instruction -> JE.Value) -> Msg -> Renderer instruction -> ( Renderer instruction, JE.Value )
+update encode msg renderer =
     case msg of
         GotAnimationFrame delta ->
-            let
-                ( newState, commands ) =
-                    handleAnimationFrameHelper delta state
-            in
-            ( Renderer newState
-            , commands
-            )
+            handleAnimationFrame delta encode renderer
 
 
-handleAnimationFrame : Float -> Renderer -> ( Renderer, JE.Value )
-handleAnimationFrame delta (Renderer state) =
-    Tuple.mapFirst Renderer (handleAnimationFrameHelper delta state)
+handleAnimationFrame : Float -> (instruction -> JE.Value) -> Renderer instruction -> ( Renderer instruction, JE.Value )
+handleAnimationFrame delta encode (Renderer state) =
+    Tuple.mapFirst Renderer (handleAnimationFrameHelper delta encode state)
 
 
-handleAnimationFrameHelper : Float -> State -> ( State, JE.Value )
-handleAnimationFrameHelper delta state =
+handleAnimationFrameHelper : Float -> (instruction -> JE.Value) -> State instruction -> ( State instruction, JE.Value )
+handleAnimationFrameHelper delta encode state =
     let
         ( timer, ( ( restInstructions, values ), numInstructionsRendered ) ) =
             Timer.step
@@ -81,7 +74,7 @@ handleAnimationFrameHelper delta state =
                         actualN =
                             max 1 (modBy state.ipfAsInt suggestedN)
                     in
-                    ( render actualN state.instructions, actualN )
+                    ( render actualN encode state.instructions, actualN )
                 )
                 state.timer
 
@@ -97,19 +90,20 @@ handleAnimationFrameHelper delta state =
     )
 
 
-render : Int -> Sequence Instruction -> ( Sequence Instruction, List JE.Value )
+render : Int -> (instruction -> JE.Value) -> Sequence instruction -> ( Sequence instruction, List JE.Value )
 render =
     renderHelper []
 
 
-renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, List JE.Value )
-renderHelper values atMost instructions =
+renderHelper : List JE.Value -> Int -> (instruction -> JE.Value) -> Sequence instruction -> ( Sequence instruction, List JE.Value )
+renderHelper values atMost encode instructions =
     if atMost > 0 then
         case Sequence.uncons instructions of
             Just ( instruction, restInstructions ) ->
                 renderHelper
-                    (Transformer.encode instruction :: values)
+                    (encode instruction :: values)
                     (atMost - 1)
+                    encode
                     restInstructions
 
             Nothing ->
@@ -123,7 +117,7 @@ renderHelper values atMost instructions =
         )
 
 
-subscriptions : (Msg -> msg) -> Renderer -> Sub msg
+subscriptions : (Msg -> msg) -> Renderer instruction -> Sub msg
 subscriptions onChange (Renderer { instructions }) =
     if Sequence.isEmpty instructions then
         Sub.none
@@ -141,7 +135,7 @@ type alias Stats =
     }
 
 
-toStats : Renderer -> Stats
+toStats : Renderer instruction -> Stats
 toStats (Renderer { timer, ipfAsFloat, totalInstructionsRendered }) =
     let
         { expectedFps, totalElapsed, actualFps, cps } =
