@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser as B
 import Data.Angle as Angle
@@ -9,6 +9,7 @@ import Data.Renderer as Renderer exposing (Renderer)
 import Data.Transformer as Transformer
 import Data.Translator as Translator
 import Html as H
+import Json.Encode as JE
 import View.Canvas as Canvas
 
 
@@ -97,12 +98,15 @@ update msg model =
     case msg of
         ChangedRenderer subMsg ->
             let
-                ( renderer, cmd ) =
+                ( renderer, commands ) =
                     Renderer.update subMsg model.renderer
             in
             ( { model | renderer = renderer }
-            , cmd
+            , draw commands
             )
+
+
+port draw : JE.Value -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg

@@ -40,31 +40,31 @@
       setCanvasDimensions(canvas, ctx);
       ctx.translate(0.5, 0.5);
 
-      app.ports.drawBatch.subscribe((operations) => {
+      app.ports.draw.subscribe((commands) => {
         requestAnimationFrame(() => {
           ctx.beginPath();
 
-          const firstOp = operations[0];
-          if (firstOp && firstOp.tag === "line") {
-            console.log("first operation = ", firstOp);
+          const firstCommand = commands[0];
+          if (firstCommand && firstCommand.tag === "line") {
+            console.log("first command = ", firstCommand);
 
-            ctx.moveTo(firstOp.x1, firstOp.y1);
+            ctx.moveTo(firstCommand.x1, firstCommand.y1);
           }
 
-          operations.forEach((op) => {
-            console.log(op);
+          commands.forEach((command) => {
+            console.log(command);
 
-            switch (op.tag) {
+            switch (command.tag) {
               case "moveTo":
-                ctx.moveTo(op.x, op.y);
+                ctx.moveTo(command.x, command.y);
                 break;
 
               case "line":
-                ctx.lineTo(op.x2, op.y2);
+                ctx.lineTo(command.x2, command.y2);
                 break;
 
               default:
-                console.log("Unknown operation:", op);
+                console.log("Unknown command:", command);
             }
           });
 

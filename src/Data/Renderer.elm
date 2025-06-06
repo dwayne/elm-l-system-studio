@@ -1,7 +1,7 @@
-port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, toStats, update)
+module Data.Renderer exposing (Msg, Renderer, handleAnimationFrame, init, subscriptions, toStats, update)
 
 import Browser.Events as BE
-import Data.Transformer as Transformer exposing (Instruction(..))
+import Data.Transformer as Transformer exposing (Instruction)
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
 import Lib.Timer as Timer exposing (Timer)
@@ -46,48 +46,63 @@ type Msg
     = GotAnimationFrame Float
 
 
-update : Msg -> Renderer -> ( Renderer, Cmd msg )
+update : Msg -> Renderer -> ( Renderer, JE.Value )
 update msg (Renderer state) =
     case msg of
         GotAnimationFrame delta ->
             let
-                ( timer, ( ( restInstructions, cmd ), numInstructionsRendered ) ) =
-                    Timer.step
-                        delta
-                        (\_ ->
-                            let
-                                expectedFps =
-                                    Timer.getExpectedFps state.timer
-
-                                suggestedN =
-                                    ceiling (expectedFps * state.ipfAsFloat * delta * 0.001)
-
-                                actualN =
-                                    max 1 (modBy state.ipfAsInt suggestedN)
-                            in
-                            ( render actualN state.instructions, actualN )
-                        )
-                        state.timer
-
-                totalInstructionsRendered =
-                    state.totalInstructionsRendered + numInstructionsRendered
+                ( newState, commands ) =
+                    handleAnimationFrameHelper delta state
             in
-            ( Renderer
-                { state
-                    | timer = timer
-                    , instructions = restInstructions
-                    , totalInstructionsRendered = totalInstructionsRendered
-                }
-            , cmd
+            ( Renderer newState
+            , commands
             )
 
 
-render : Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+handleAnimationFrame : Float -> Renderer -> ( Renderer, JE.Value )
+handleAnimationFrame delta (Renderer state) =
+    Tuple.mapFirst Renderer (handleAnimationFrameHelper delta state)
+
+
+handleAnimationFrameHelper : Float -> State -> ( State, JE.Value )
+handleAnimationFrameHelper delta state =
+    let
+        ( timer, ( ( restInstructions, values ), numInstructionsRendered ) ) =
+            Timer.step
+                delta
+                (\_ ->
+                    let
+                        expectedFps =
+                            Timer.getExpectedFps state.timer
+
+                        suggestedN =
+                            ceiling (expectedFps * state.ipfAsFloat * delta * 0.001)
+
+                        actualN =
+                            max 1 (modBy state.ipfAsInt suggestedN)
+                    in
+                    ( render actualN state.instructions, actualN )
+                )
+                state.timer
+
+        totalInstructionsRendered =
+            state.totalInstructionsRendered + numInstructionsRendered
+    in
+    ( { state
+        | timer = timer
+        , instructions = restInstructions
+        , totalInstructionsRendered = totalInstructionsRendered
+      }
+    , JE.list identity (List.reverse values)
+    )
+
+
+render : Int -> Sequence Instruction -> ( Sequence Instruction, List JE.Value )
 render =
     renderHelper []
 
 
-renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, Cmd msg )
+renderHelper : List JE.Value -> Int -> Sequence Instruction -> ( Sequence Instruction, List JE.Value )
 renderHelper values atMost instructions =
     if atMost > 0 then
         case Sequence.uncons instructions of
@@ -99,25 +114,13 @@ renderHelper values atMost instructions =
 
             Nothing ->
                 ( instructions
-                , toCmd values
+                , values
                 )
 
     else
         ( instructions
-        , toCmd values
+        , values
         )
-
-
-toCmd : List JE.Value -> Cmd msg
-toCmd values =
-    if values == [] then
-        Cmd.none
-
-    else
-        drawBatch (JE.list identity (List.reverse values))
-
-
-port drawBatch : JE.Value -> Cmd msg
 
 
 subscriptions : (Msg -> msg) -> Renderer -> Sub msg
