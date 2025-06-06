@@ -1,11 +1,40 @@
-module Data.Translator exposing (Instruction(..), translate)
+module Data.Translator exposing (Instruction(..), TranslateOptions, default, translate)
 
 import Data.Angle as Angle exposing (Angle)
+import Data.Color as Color exposing (Color)
 import Data.Dictionary as Dictionary exposing (Dictionary, Meaning(..))
 import Data.Position exposing (Position)
-import Data.Settings exposing (Settings)
 import Data.Turtle as Turtle exposing (Turtle)
 import Lib.Sequence as Sequence exposing (Sequence)
+
+
+type alias TranslateOptions =
+    { startPosition : Position
+    , startHeading : Angle
+    , lineLength : Float
+    , lineLengthScaleFactor : Float
+    , lineWidth : Float
+    , lineWidthIncrement : Float
+    , turningAngle : Angle
+    , turningAngleIncrement : Angle
+    , lineColor : Color
+    , fillColor : Color
+    }
+
+
+default : TranslateOptions
+default =
+    { startPosition = { x = 0, y = 0 }
+    , startHeading = Angle.zero
+    , lineLength = 1
+    , lineLengthScaleFactor = 1
+    , lineWidth = 1
+    , lineWidthIncrement = 0
+    , turningAngle = Angle.zero
+    , turningAngleIncrement = Angle.zero
+    , lineColor = Color.black
+    , fillColor = Color.white
+    }
 
 
 type Instruction
@@ -17,17 +46,17 @@ type Instruction
         }
 
 
-translate : Dictionary -> Settings -> Sequence Char -> Sequence Instruction
-translate dictionary settings chars =
+translate : Dictionary -> TranslateOptions -> Sequence Char -> Sequence Instruction
+translate dictionary options chars =
     let
         startState =
-            initState settings
+            initState options
     in
     Sequence.filterMapWithState
         (\ch state ->
             case Dictionary.find ch dictionary of
                 Just meaning ->
-                    translateMeaning settings meaning state
+                    translateMeaning options meaning state
 
                 Nothing ->
                     ( Nothing, state )
@@ -36,8 +65,8 @@ translate dictionary settings chars =
         chars
 
 
-translateMeaning : Settings -> Meaning -> State -> ( Maybe Instruction, State )
-translateMeaning settings meaning state =
+translateMeaning : TranslateOptions -> Meaning -> State -> ( Maybe Instruction, State )
+translateMeaning options meaning state =
     case meaning of
         Move ->
             let
@@ -105,12 +134,12 @@ translateMeaning settings meaning state =
 
         IncrementLineWidth ->
             ( Nothing
-            , { state | lineWidth = state.lineWidth + settings.lineWidthIncrement }
+            , { state | lineWidth = state.lineWidth + options.lineWidthIncrement }
             )
 
         DecrementLineWidth ->
             ( Nothing
-            , { state | lineWidth = state.lineWidth - settings.lineWidthIncrement }
+            , { state | lineWidth = state.lineWidth - options.lineWidthIncrement }
             )
 
         DrawDot ->
@@ -124,18 +153,18 @@ translateMeaning settings meaning state =
 
         MultiplyLineLength ->
             ( Nothing
-            , { state | lineLength = state.lineLength * settings.lineLengthScaleFactor }
+            , { state | lineLength = state.lineLength * options.lineLengthScaleFactor }
             )
 
         DivideLineLength ->
             ( Nothing
             , { state
                 | lineLength =
-                    if settings.lineLengthScaleFactor == 0 then
+                    if options.lineLengthScaleFactor == 0 then
                         0
 
                     else
-                        state.lineLength / settings.lineLengthScaleFactor
+                        state.lineLength / options.lineLengthScaleFactor
               }
             )
 
@@ -146,12 +175,12 @@ translateMeaning settings meaning state =
 
         IncrementTurningAngle ->
             ( Nothing
-            , { state | turningAngle = Angle.add state.turningAngle settings.turningAngleIncrement }
+            , { state | turningAngle = Angle.add state.turningAngle options.turningAngleIncrement }
             )
 
         DecrementTurningAngle ->
             ( Nothing
-            , { state | turningAngle = Angle.sub state.turningAngle settings.turningAngleIncrement }
+            , { state | turningAngle = Angle.sub state.turningAngle options.turningAngleIncrement }
             )
 
 
@@ -169,12 +198,12 @@ type alias State =
     }
 
 
-initState : Settings -> State
-initState settings =
-    { turtle = Turtle.new settings.startPosition settings.startHeading
+initState : TranslateOptions -> State
+initState options =
+    { turtle = Turtle.new options.startPosition options.startHeading
     , stack = []
-    , lineLength = settings.lineLength
-    , lineWidth = settings.lineWidth
-    , turningAngle = settings.turningAngle
+    , lineLength = options.lineLength
+    , lineWidth = options.lineWidth
+    , turningAngle = options.turningAngle
     , swapPlusMinus = False
     }

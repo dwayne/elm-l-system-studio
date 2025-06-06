@@ -2,6 +2,7 @@ module Data.Transformer exposing
     ( Coords
     , Instruction(..)
     , TransformOptions
+    , default
     , encode
     , transform
     )
@@ -16,6 +17,29 @@ type alias TransformOptions =
     { windowPosition : Position
     , windowSize : Float
     , canvasSize : Int
+    }
+
+
+default : TranslateOptions
+default =
+    { windowPosition = { x = -250, y = -250 }
+    , windowSize = 500
+    , canvasSize = 500
+    }
+
+
+type Instruction
+    = MoveTo Coords
+    | Line
+        { start : Coords
+        , end : Coords
+        , lineWidth : Float
+        }
+
+
+type alias Coords =
+    { x : Int
+    , y : Int
     }
 
 
@@ -45,21 +69,6 @@ type alias Config =
     , s : Float
     , l : Float
     , ls : Float
-    }
-
-
-type Instruction
-    = MoveTo Coords
-    | Line
-        { start : Coords
-        , end : Coords
-        , lineWidth : Float
-        }
-
-
-type alias Coords =
-    { x : Int
-    , y : Int
     }
 
 
@@ -101,7 +110,7 @@ encode instruction =
                 , ( "y", JE.int y )
                 ]
 
-        Line { start, end, lineWidth } ->
+        Line { start, end } ->
             JE.object
                 [ ( "tag", JE.string "line" )
                 , ( "x1", JE.int start.x )
