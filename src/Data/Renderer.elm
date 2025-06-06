@@ -1,11 +1,10 @@
-port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, toInfo, update)
+port module Data.Renderer exposing (Msg, Renderer, init, subscriptions, toStats, update)
 
 import Browser.Events as BE
-import Data.Position exposing (Position)
-import Data.Timer as Timer exposing (Timer)
 import Data.Transformer as Transformer exposing (Instruction(..))
 import Json.Encode as JE
 import Lib.Sequence as Sequence exposing (Sequence)
+import Lib.Timer as Timer exposing (Timer)
 
 
 type Renderer
@@ -17,27 +16,29 @@ type alias State =
     , ipfAsInt : Int
     , ipfAsFloat : Float
     , instructions : Sequence Instruction
-    , totalInstructions : Int
-    , commands : List JE.Value
+    , totalInstructionsRendered : Int
     }
 
 
 type alias InitOptions =
     { fps : Int
-    , ipf : Int
+    , ipf : Int -- instructions per frame
     , instructions : Sequence Instruction
     }
 
 
 init : InitOptions -> Renderer
 init { fps, ipf, instructions } =
+    let
+        ipfAsInt =
+            max 1 ipf
+    in
     Renderer
         { timer = Timer.new fps
-        , ipfAsInt = ipf
-        , ipfAsFloat = toFloat ipf
+        , ipfAsInt = ipfAsInt
+        , ipfAsFloat = toFloat ipfAsInt
         , instructions = instructions
-        , totalInstructions = 0
-        , commands = []
+        , totalInstructionsRendered = 0
         }
 
 
@@ -50,28 +51,33 @@ update msg (Renderer state) =
     case msg of
         GotAnimationFrame delta ->
             let
-                ( timer, ( ( instructions, cmd ), numInstructions ) ) =
+                ( timer, ( ( restInstructions, cmd ), numInstructionsRendered ) ) =
                     Timer.step
                         delta
                         (\_ ->
                             let
-                                { expectedFps } =
-                                    Timer.toInfo state.timer
+                                expectedFps =
+                                    Timer.getExpectedFps state.timer
 
-                                expectedNumInstructions =
+                                suggestedN =
                                     ceiling (expectedFps * state.ipfAsFloat * delta * 0.001)
 
-                                n =
-                                    max 1 (modBy state.ipfAsInt expectedNumInstructions)
+                                actualN =
+                                    max 1 (modBy state.ipfAsInt suggestedN)
                             in
-                            ( render n state.instructions, n )
+                            ( render actualN state.instructions, actualN )
                         )
                         state.timer
 
-                totalInstructions =
-                    state.totalInstructions + numInstructions
+                totalInstructionsRendered =
+                    state.totalInstructionsRendered + numInstructionsRendered
             in
-            ( Renderer { state | timer = timer, instructions = instructions, totalInstructions = totalInstructions }
+            ( Renderer
+                { state
+                    | timer = timer
+                    , instructions = restInstructions
+                    , totalInstructionsRendered = totalInstructionsRendered
+                }
             , cmd
             )
 
@@ -108,10 +114,7 @@ toCmd values =
         Cmd.none
 
     else
-        values
-            |> List.reverse
-            |> JE.list identity
-            |> drawBatch
+        drawBatch (JE.list identity (List.reverse values))
 
 
 port drawBatch : JE.Value -> Cmd msg
@@ -126,29 +129,29 @@ subscriptions onChange (Renderer { instructions }) =
         BE.onAnimationFrameDelta (onChange << GotAnimationFrame)
 
 
-type alias Info =
+type alias Stats =
     { expectedFps : Float
     , actualFps : Float
     , cps : Float
-    , ips : Float
-    , commands : List JE.Value
+    , expectedIps : Float
+    , actualIps : Float
     }
 
 
-toInfo : Renderer -> Info
-toInfo (Renderer { timer, totalInstructions, commands }) =
+toStats : Renderer -> Stats
+toStats (Renderer { timer, ipfAsFloat, totalInstructionsRendered }) =
     let
         { expectedFps, totalElapsed, actualFps, cps } =
-            Timer.toInfo timer
+            Timer.toStats timer
     in
     { expectedFps = expectedFps
     , actualFps = actualFps
     , cps = cps
-    , ips =
+    , expectedIps = ipfAsFloat * expectedFps
+    , actualIps =
         if totalElapsed == 0 then
             0
 
         else
-            1000 * toFloat totalInstructions / totalElapsed
-    , commands = commands
+            1000 * toFloat totalInstructionsRendered / totalElapsed
     }

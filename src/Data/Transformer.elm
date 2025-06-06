@@ -20,7 +20,7 @@ type alias TransformOptions =
     }
 
 
-default : TranslateOptions
+default : TransformOptions
 default =
     { windowPosition = { x = -250, y = -250 }
     , windowSize = 500

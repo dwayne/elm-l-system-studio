@@ -1,4 +1,4 @@
-module Data.Timer exposing (Timer, new, step, toInfo)
+module Lib.Timer exposing (Timer, getExpectedFps, new, step, toStats)
 
 
 type Timer
@@ -15,12 +15,16 @@ type alias State =
     }
 
 
+maxFps : Int
+maxFps =
+    60
+
+
 new : Int -> Timer
 new rawFps =
     let
         fps =
-            -- 1 <= fps <= 240
-            toFloat (min 240 (max 1 rawFps))
+            toFloat (min maxFps (max 1 rawFps))
 
         interval =
             1000 / fps
@@ -33,6 +37,11 @@ new rawFps =
         , totalElapsed = 0
         , elapsed = 0
         }
+
+
+getExpectedFps : Timer -> Float
+getExpectedFps (Timer { expectedFps }) =
+    expectedFps
 
 
 step : Float -> (() -> a) -> Timer -> ( Timer, a )
@@ -78,7 +87,7 @@ quotRemHelper q x y =
         quotRemHelper (q + 1) (x - y) y
 
 
-type alias Info =
+type alias Stats =
     { expectedFps : Float
     , interval : Float
     , totalCalls : Int
@@ -90,12 +99,9 @@ type alias Info =
     }
 
 
-toInfo : Timer -> Info
-toInfo (Timer state) =
+toStats : Timer -> Stats
+toStats (Timer { expectedFps, interval, totalCalls, totalFrames, totalElapsed, elapsed }) =
     let
-        totalElapsed =
-            state.totalElapsed
-
         ( actualFps, cps ) =
             if totalElapsed == 0 then
                 ( 0, 0 )
@@ -105,16 +111,16 @@ toInfo (Timer state) =
                     factor =
                         1000 / totalElapsed
                 in
-                ( toFloat state.totalFrames * factor
-                , toFloat state.totalCalls * factor
+                ( toFloat totalFrames * factor
+                , toFloat totalCalls * factor
                 )
     in
-    { expectedFps = state.expectedFps
-    , interval = state.interval
-    , totalCalls = state.totalCalls
-    , totalFrames = state.totalFrames
+    { expectedFps = expectedFps
+    , interval = interval
+    , totalCalls = totalCalls
+    , totalFrames = totalFrames
     , totalElapsed = totalElapsed
-    , elapsed = state.elapsed
+    , elapsed = elapsed
     , actualFps = actualFps
     , cps = cps
     }

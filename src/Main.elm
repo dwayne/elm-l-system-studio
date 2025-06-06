@@ -6,7 +6,6 @@ import Data.Dictionary as Dictionary
 import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
-import Data.Settings as Settings
 import Data.Transformer as Transformer
 import Data.Translator as Translator
 import Html as H
@@ -53,11 +52,11 @@ init =
         chars =
             Generator.generate 3 rules axiom
 
-        defaultSettings =
-            Settings.default
+        defaultTranslateOptions =
+            Translator.default
 
-        settings =
-            { defaultSettings
+        translateOptions =
+            { defaultTranslateOptions
                 | lineLength = 1
                 , turningAngle = Angle.fromDegrees 90
             }
@@ -70,7 +69,7 @@ init =
 
         instructions =
             chars
-                |> Translator.translate Dictionary.default settings
+                |> Translator.translate Dictionary.default translateOptions
                 |> Transformer.transform transformOptions
     in
     always
@@ -118,8 +117,8 @@ subscriptions model =
 view : Model -> H.Html msg
 view { renderer } =
     let
-        { expectedFps, actualFps, cps, ips, commands } =
-            Renderer.toInfo renderer
+        { expectedFps, actualFps, cps, expectedIps, actualIps } =
+            Renderer.toStats renderer
     in
     H.div []
         [ Canvas.view
@@ -129,6 +128,7 @@ view { renderer } =
             }
         , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
         , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
-        , H.p [] [ H.text <| "Calls per second (CPS) = " ++ String.fromFloat cps ]
-        , H.p [] [ H.text <| "Instructions per seconds (IPS) = " ++ String.fromFloat ips ]
+        , H.p [] [ H.text <| "CPS = " ++ String.fromFloat cps ]
+        , H.p [] [ H.text <| "Expected IPS = " ++ String.fromFloat expectedIps ]
+        , H.p [] [ H.text <| "Actual IPS = " ++ String.fromFloat actualIps ]
         ]
