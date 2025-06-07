@@ -25,15 +25,6 @@ main =
 
 
 
--- CONSTANTS
-
-
-canvasSize : Int
-canvasSize =
-    500
-
-
-
 -- MODEL
 
 
@@ -46,22 +37,8 @@ type alias Model =
 init : () -> ( Model, Cmd msg )
 init =
     let
-        rules =
-            [ ( 'F', "F+F-F-FF+F+F-F" ) ]
-
-        axiom =
-            "F+F+F+F"
-
-        defaultSettings =
-            Settings.default rules axiom
-
         settings =
-            { defaultSettings
-                | turningAngle = Angle.fromDegrees 90
-                , windowPosition = { x = -25, y = -25 }
-                , windowSize = 100
-                , canvasSize = canvasSize
-            }
+            Settings.kochCurve
     in
     always
         ( { settings = settings
@@ -141,8 +118,11 @@ subscriptions model =
 
 
 view : Model -> H.Html msg
-view { renderer } =
+view { settings, renderer } =
     let
+        canvasSize =
+            settings.canvasSize
+
         { expectedFps, actualFps, cps, expectedIps, actualIps } =
             Renderer.toStats renderer
     in
