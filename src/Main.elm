@@ -6,6 +6,7 @@ import Data.Dictionary as Dictionary
 import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
+import Data.Settings as Settings exposing (Settings)
 import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
 import Html as H
@@ -37,7 +38,8 @@ canvasSize =
 
 
 type alias Model =
-    { renderer : Renderer Instruction
+    { settings : Settings
+    , renderer : Renderer Instruction
     }
 
 
@@ -50,39 +52,59 @@ init =
         axiom =
             "F+F+F+F"
 
-        chars =
-            Generator.generate 3 rules axiom
+        defaultSettings =
+            Settings.default rules axiom
 
-        defaultTranslateOptions =
-            Translator.default
-
-        translateOptions =
-            { defaultTranslateOptions
-                | lineLength = 1
-                , turningAngle = Angle.fromDegrees 90
+        settings =
+            { defaultSettings
+                | turningAngle = Angle.fromDegrees 90
+                , windowPosition = { x = -25, y = -25 }
+                , windowSize = 100
+                , canvasSize = canvasSize
             }
-
-        transformOptions =
-            { windowPosition = { x = -25, y = -25 }
-            , windowSize = 100
-            , canvasSize = canvasSize
-            }
-
-        instructions =
-            chars
-                |> Translator.translate Dictionary.default translateOptions
-                |> Transformer.transform transformOptions
     in
     always
-        ( { renderer =
-                Renderer.init
-                    { fps = 60
-                    , ipf = 100
-                    , instructions = instructions
-                    }
+        ( { settings = settings
+          , renderer = initRenderer settings
           }
         , Cmd.none
         )
+
+
+initRenderer : Settings -> Renderer Instruction
+initRenderer settings =
+    let
+        rules =
+            settings.rules
+
+        axiom =
+            settings.axiom
+
+        iterations =
+            settings.iterations
+
+        dictionary =
+            settings.dictionary
+
+        translateOptions =
+            Settings.toTranslateOptions settings
+
+        transformOptions =
+            Settings.toTransformOptions settings
+
+        chars =
+            Generator.generate settings.iterations settings.rules settings.axiom
+
+        instructions =
+            chars
+                |> Translator.translate dictionary translateOptions
+                |> Transformer.transform transformOptions
+    in
+    Renderer.init
+        { fps = settings.fps
+        , ipf = settings.ipf
+        , instructions = instructions
+        }
 
 
 
