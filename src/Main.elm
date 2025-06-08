@@ -11,10 +11,10 @@ import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
 import Html as H
 import Json.Encode as JE
+import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
-import View.Input.Axiom as Axiom
-import View.Input.Iterations as Iterations exposing (Iterations)
+import View.Iterations as Iterations exposing (Iterations)
 
 
 main : Program () Model Msg
@@ -32,7 +32,7 @@ main =
 
 
 type alias Model =
-    { axiom : String
+    { axiom : Axiom
     , iterations : Iterations
     , settings : Settings
     , renderer : Renderer Instruction
@@ -46,7 +46,7 @@ init =
             Settings.kochCurve
     in
     always
-        ( { axiom = settings.axiom
+        ( { axiom = Axiom.init settings.axiom
           , iterations = Iterations.init settings.iterations
           , settings = settings
           , renderer = initRenderer settings
@@ -96,7 +96,7 @@ initRenderer settings =
 
 
 type Msg
-    = InputAxiom String
+    = ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
     | ChangedRenderer Renderer.Msg
 
@@ -104,8 +104,8 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        InputAxiom axiom ->
-            ( { model | axiom = axiom }
+        ChangedAxiom subMsg ->
+            ( { model | axiom = Axiom.update subMsg }
             , Cmd.none
             )
 
@@ -148,7 +148,7 @@ view { axiom, iterations, settings, renderer } =
     H.div []
         [ Axiom.view
             { axiom = axiom
-            , onInput = InputAxiom
+            , onChange = ChangedAxiom
             }
         , Iterations.view
             { iterations = iterations

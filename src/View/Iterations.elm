@@ -1,4 +1,4 @@
-module View.Input.Iterations exposing (Iterations, ViewOptions, init, update, view)
+module View.Iterations exposing (Iterations, ViewOptions, init, update, view)
 
 import Html as H
 import View.Field as Field exposing (Field)
