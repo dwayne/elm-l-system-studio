@@ -1,35 +1,23 @@
 module View.StartHeading exposing (StartHeading, ViewOptions, init, update, view)
 
-import Data.Angle as Angle exposing (Angle)
+import Data.Angle exposing (Angle)
 import Html as H
+import View.AngleField as AngleField exposing (AngleField)
 import View.Field as Field exposing (Field)
 
 
 type alias StartHeading =
-    Field Angle ()
+    AngleField
 
 
 init : Angle -> StartHeading
-init default =
-    Field.init
-        { default = default
-        , toRaw = String.fromFloat << Angle.toDegrees
-        , toProcessed = Field.Default
-        }
+init =
+    AngleField.init
 
 
 update : Field.Msg -> StartHeading
 update =
-    Field.update
-        { toProcessed =
-            \raw ->
-                case String.toFloat raw of
-                    Just theta ->
-                        Field.Valid (Angle.fromDegrees theta)
-
-                    Nothing ->
-                        Field.Invalid ()
-        }
+    AngleField.update
 
 
 type alias ViewOptions msg =
@@ -40,13 +28,9 @@ type alias ViewOptions msg =
 
 view : ViewOptions msg -> H.Html msg
 view { startHeading, onChange } =
-    Field.view
+    AngleField.view
         { id = "start-heading"
         , label = "Start Heading"
-        , type_ =
-            Field.Float
-                { min = Nothing
-                }
         , isRequired = True
         , placeholder = "0"
         , field = startHeading
