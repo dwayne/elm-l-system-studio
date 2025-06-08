@@ -18,6 +18,7 @@ import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
 import View.StartHeading as StartHeading exposing (StartHeading)
+import View.TurningAngle as TurningAngle exposing (TurningAngle)
 
 
 main : Program () Model Msg
@@ -40,6 +41,7 @@ type alias Model =
     , startHeading : StartHeading
     , lineLength : LineLength
     , lineLengthScaleFactor : LineLengthScaleFactor
+    , turningAngle : TurningAngle
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -57,6 +59,7 @@ init =
           , startHeading = StartHeading.init settings.startHeading
           , lineLength = LineLength.init settings.lineLength
           , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
+          , turningAngle = TurningAngle.init settings.turningAngle
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -110,6 +113,7 @@ type Msg
     | ChangedStartHeading Field.Msg
     | ChangedLineLength Field.Msg
     | ChangedLineLengthScaleFactor Field.Msg
+    | ChangedTurningAngle Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -141,6 +145,11 @@ update msg model =
             , Cmd.none
             )
 
+        ChangedTurningAngle subMsg ->
+            ( { model | turningAngle = TurningAngle.update subMsg }
+            , Cmd.none
+            )
+
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
@@ -164,7 +173,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, settings, renderer } =
+view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -192,6 +201,10 @@ view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, setti
         , LineLengthScaleFactor.view
             { lineLengthScaleFactor = lineLengthScaleFactor
             , onChange = ChangedLineLengthScaleFactor
+            }
+        , TurningAngle.view
+            { turningAngle = turningAngle
+            , onChange = ChangedTurningAngle
             }
         , Canvas.view
             { id = "canvas"
