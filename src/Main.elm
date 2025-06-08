@@ -13,6 +13,7 @@ import Html as H
 import Json.Encode as JE
 import View.Canvas as Canvas
 import View.Input.Axiom as Axiom
+import View.Input.Iterations as Iterations exposing (Iterations)
 
 
 main : Program () Model Msg
@@ -31,6 +32,7 @@ main =
 
 type alias Model =
     { axiom : String
+    , iterations : Iterations
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -44,6 +46,7 @@ init =
     in
     always
         ( { axiom = settings.axiom
+          , iterations = Iterations.init settings.iterations
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -93,6 +96,7 @@ initRenderer settings =
 
 type Msg
     = InputAxiom String
+    | ChangedIterations Iterations.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -101,6 +105,11 @@ update msg model =
     case msg of
         InputAxiom axiom ->
             ( { model | axiom = axiom }
+            , Cmd.none
+            )
+
+        ChangedIterations subMsg ->
+            ( { model | iterations = Iterations.update subMsg }
             , Cmd.none
             )
 
@@ -127,7 +136,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, settings, renderer } =
+view { axiom, iterations, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -139,6 +148,10 @@ view { axiom, settings, renderer } =
         [ Axiom.view
             { axiom = axiom
             , onInput = InputAxiom
+            }
+        , Iterations.view
+            { iterations = iterations
+            , onChange = ChangedIterations
             }
         , Canvas.view
             { id = "canvas"
