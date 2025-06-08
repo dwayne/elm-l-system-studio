@@ -1,44 +1,22 @@
 module View.LineLengthScaleFactor exposing (LineLengthScaleFactor, ViewOptions, init, update, view)
 
 import Html as H
-import View.Field as Field exposing (Field)
+import View.Field as Field
+import View.NonNegativeFloatField as NonNegativeFloatField exposing (NonNegativeFloatField)
 
 
 type alias LineLengthScaleFactor =
-    Field Float ()
+    NonNegativeFloatField
 
 
 init : Float -> LineLengthScaleFactor
-init default =
-    Field.init
-        { default = default
-        , toRaw = String.fromFloat
-        , toProcessed =
-            \f ->
-                if f >= 0 then
-                    Field.Default f
-
-                else
-                    Field.Invalid ()
-        }
+init =
+    NonNegativeFloatField.init
 
 
 update : Field.Msg -> LineLengthScaleFactor
 update =
-    Field.update
-        { toProcessed =
-            \raw ->
-                case String.toFloat raw of
-                    Just f ->
-                        if f >= 0 then
-                            Field.Valid f
-
-                        else
-                            Field.Invalid ()
-
-                    Nothing ->
-                        Field.Invalid ()
-        }
+    NonNegativeFloatField.update
 
 
 type alias ViewOptions msg =
@@ -49,13 +27,9 @@ type alias ViewOptions msg =
 
 view : ViewOptions msg -> H.Html msg
 view { lineLengthScaleFactor, onChange } =
-    Field.view
+    NonNegativeFloatField.view
         { id = "line-length-scale-factor"
         , label = "Line Length Scale Factor"
-        , type_ =
-            Field.Float
-                { min = Just 0
-                }
         , isRequired = True
         , placeholder = "1"
         , field = lineLengthScaleFactor
