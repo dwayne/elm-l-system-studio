@@ -15,6 +15,7 @@ import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
 import View.Iterations as Iterations exposing (Iterations)
+import View.LineLength as LineLength exposing (LineLength)
 import View.StartHeading as StartHeading exposing (StartHeading)
 
 
@@ -36,6 +37,7 @@ type alias Model =
     { axiom : Axiom
     , iterations : Iterations
     , startHeading : StartHeading
+    , lineLength : LineLength
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -51,6 +53,7 @@ init =
         ( { axiom = Axiom.init settings.axiom
           , iterations = Iterations.init settings.iterations
           , startHeading = StartHeading.init settings.startHeading
+          , lineLength = LineLength.init settings.lineLength
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -102,6 +105,7 @@ type Msg
     = ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
     | ChangedStartHeading Field.Msg
+    | ChangedLineLength Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -120,6 +124,11 @@ update msg model =
 
         ChangedStartHeading subMsg ->
             ( { model | startHeading = StartHeading.update subMsg }
+            , Cmd.none
+            )
+
+        ChangedLineLength subMsg ->
+            ( { model | lineLength = LineLength.update subMsg }
             , Cmd.none
             )
 
@@ -146,7 +155,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, startHeading, settings, renderer } =
+view { axiom, iterations, startHeading, lineLength, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -166,6 +175,10 @@ view { axiom, iterations, startHeading, settings, renderer } =
         , StartHeading.view
             { startHeading = startHeading
             , onChange = ChangedStartHeading
+            }
+        , LineLength.view
+            { lineLength = lineLength
+            , onChange = ChangedLineLength
             }
         , Canvas.view
             { id = "canvas"

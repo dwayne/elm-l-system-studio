@@ -43,7 +43,10 @@ view { startHeading, onChange } =
     Field.view
         { id = "start-heading"
         , label = "Start Heading"
-        , type_ = Field.Float
+        , type_ =
+            Field.Float
+                { min = Nothing
+                }
         , isRequired = True
         , placeholder = "0"
         , field = startHeading

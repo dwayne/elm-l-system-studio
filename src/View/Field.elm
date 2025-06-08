@@ -85,6 +85,8 @@ type Type
         , max : Maybe Int
         }
     | Float
+        { min : Maybe Float
+        }
 
 
 view : ViewOptions a e msg -> H.Html msg
@@ -137,10 +139,13 @@ typeToAttrs type_ =
                 , Maybe.map (HA.max << String.fromInt) max
                 ]
 
-        Float ->
-            [ HA.type_ "number"
-            , HA.step "any"
-            ]
+        Float { min } ->
+            List.filterMap
+                identity
+                [ Just (HA.type_ "number")
+                , Just (HA.step "any")
+                , Maybe.map (HA.min << String.fromFloat) min
+                ]
 
 
 toValue : Field a e -> Result e a
