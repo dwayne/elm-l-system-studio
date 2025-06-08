@@ -80,10 +80,11 @@ type alias ViewOptions a e msg =
 
 type Type
     = Text
-    | Number
+    | Int
         { min : Maybe Int
         , max : Maybe Int
         }
+    | Float
 
 
 view : ViewOptions a e msg -> H.Html msg
@@ -128,13 +129,18 @@ typeToAttrs type_ =
         Text ->
             [ HA.type_ "text" ]
 
-        Number { min, max } ->
+        Int { min, max } ->
             List.filterMap
                 identity
                 [ Just <| HA.type_ "number"
                 , Maybe.map (HA.min << String.fromInt) min
                 , Maybe.map (HA.max << String.fromInt) max
                 ]
+
+        Float ->
+            [ HA.type_ "number"
+            , HA.step "any"
+            ]
 
 
 toValue : Field a e -> Result e a

@@ -15,6 +15,7 @@ import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
 import View.Iterations as Iterations exposing (Iterations)
+import View.StartHeading as StartHeading exposing (StartHeading)
 
 
 main : Program () Model Msg
@@ -34,6 +35,7 @@ main =
 type alias Model =
     { axiom : Axiom
     , iterations : Iterations
+    , startHeading : StartHeading
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -48,6 +50,7 @@ init =
     always
         ( { axiom = Axiom.init settings.axiom
           , iterations = Iterations.init settings.iterations
+          , startHeading = StartHeading.init settings.startHeading
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -98,6 +101,7 @@ initRenderer settings =
 type Msg
     = ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
+    | ChangedStartHeading Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -111,6 +115,11 @@ update msg model =
 
         ChangedIterations subMsg ->
             ( { model | iterations = Iterations.update subMsg }
+            , Cmd.none
+            )
+
+        ChangedStartHeading subMsg ->
+            ( { model | startHeading = StartHeading.update subMsg }
             , Cmd.none
             )
 
@@ -137,7 +146,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, settings, renderer } =
+view { axiom, iterations, startHeading, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -153,6 +162,10 @@ view { axiom, iterations, settings, renderer } =
         , Iterations.view
             { iterations = iterations
             , onChange = ChangedIterations
+            }
+        , StartHeading.view
+            { startHeading = startHeading
+            , onChange = ChangedStartHeading
             }
         , Canvas.view
             { id = "canvas"

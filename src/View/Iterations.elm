@@ -53,7 +53,7 @@ view { iterations, onChange } =
         { id = "iterations"
         , label = "Iterations"
         , type_ =
-            Field.Number
+            Field.Int
                 { min = Just 0
                 , max = Nothing
                 }

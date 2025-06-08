@@ -7,6 +7,7 @@ module Data.Angle exposing
     , sinAndCos
     , straight
     , sub
+    , toDegrees
     , toRadians
     , zero
     )
@@ -73,6 +74,11 @@ sinAndCos (Deg angle) =
         ( sin alpha
         , cos alpha
         )
+
+
+toDegrees : Angle -> Float
+toDegrees (Deg angle) =
+    angle
 
 
 toRadians : Angle -> Float
