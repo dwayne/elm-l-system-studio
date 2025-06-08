@@ -14,6 +14,8 @@ import Json.Encode as JE
 import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
+import View.Fps as Fps exposing (Fps)
+import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
@@ -21,6 +23,7 @@ import View.StartHeading as StartHeading exposing (StartHeading)
 import View.TurningAngle as TurningAngle exposing (TurningAngle)
 import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
 import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
+import View.WindowSize as WindowSize exposing (WindowSize)
 
 
 main : Program () Model Msg
@@ -46,6 +49,9 @@ type alias Model =
     , turningAngle : TurningAngle
     , windowPositionX : WindowPositionX
     , windowPositionY : WindowPositionY
+    , windowSize : WindowSize
+    , fps : Fps
+    , ipf : Ipf
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -66,6 +72,9 @@ init =
           , turningAngle = TurningAngle.init settings.turningAngle
           , windowPositionX = WindowPositionX.init settings.windowPosition.x
           , windowPositionY = WindowPositionX.init settings.windowPosition.y
+          , windowSize = WindowSize.init settings.windowSize
+          , fps = Fps.init settings.fps
+          , ipf = Ipf.init settings.ipf
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -122,6 +131,9 @@ type Msg
     | ChangedTurningAngle Field.Msg
     | ChangedWindowPositionX Field.Msg
     | ChangedWindowPositionY Field.Msg
+    | ChangedWindowSize Field.Msg
+    | ChangedFps Field.Msg
+    | ChangedIpf Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -168,6 +180,21 @@ update msg model =
             , Cmd.none
             )
 
+        ChangedWindowSize subMsg ->
+            ( { model | windowSize = WindowSize.update subMsg }
+            , Cmd.none
+            )
+
+        ChangedFps subMsg ->
+            ( { model | fps = Fps.update subMsg }
+            , Cmd.none
+            )
+
+        ChangedIpf subMsg ->
+            ( { model | ipf = Ipf.update subMsg }
+            , Cmd.none
+            )
+
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
@@ -191,7 +218,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, settings, renderer } =
+view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -231,6 +258,18 @@ view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turni
         , WindowPositionY.view
             { windowPositionY = windowPositionY
             , onChange = ChangedWindowPositionY
+            }
+        , WindowSize.view
+            { windowSize = windowSize
+            , onChange = ChangedWindowSize
+            }
+        , Fps.view
+            { fps = fps
+            , onChange = ChangedFps
+            }
+        , Ipf.view
+            { ipf = ipf
+            , onChange = ChangedIpf
             }
         , Canvas.view
             { id = "canvas"
