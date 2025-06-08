@@ -19,6 +19,8 @@ import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
 import View.StartHeading as StartHeading exposing (StartHeading)
 import View.TurningAngle as TurningAngle exposing (TurningAngle)
+import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
+import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
 
 
 main : Program () Model Msg
@@ -42,6 +44,8 @@ type alias Model =
     , lineLength : LineLength
     , lineLengthScaleFactor : LineLengthScaleFactor
     , turningAngle : TurningAngle
+    , windowPositionX : WindowPositionX
+    , windowPositionY : WindowPositionY
     , settings : Settings
     , renderer : Renderer Instruction
     }
@@ -60,6 +64,8 @@ init =
           , lineLength = LineLength.init settings.lineLength
           , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
           , turningAngle = TurningAngle.init settings.turningAngle
+          , windowPositionX = WindowPositionX.init settings.windowPosition.x
+          , windowPositionY = WindowPositionX.init settings.windowPosition.y
           , settings = settings
           , renderer = initRenderer settings
           }
@@ -114,6 +120,8 @@ type Msg
     | ChangedLineLength Field.Msg
     | ChangedLineLengthScaleFactor Field.Msg
     | ChangedTurningAngle Field.Msg
+    | ChangedWindowPositionX Field.Msg
+    | ChangedWindowPositionY Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
@@ -150,6 +158,16 @@ update msg model =
             , Cmd.none
             )
 
+        ChangedWindowPositionX subMsg ->
+            ( { model | windowPositionX = WindowPositionX.update subMsg }
+            , Cmd.none
+            )
+
+        ChangedWindowPositionY subMsg ->
+            ( { model | windowPositionY = WindowPositionY.update subMsg }
+            , Cmd.none
+            )
+
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
@@ -173,7 +191,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, settings, renderer } =
+view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -205,6 +223,14 @@ view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turni
         , TurningAngle.view
             { turningAngle = turningAngle
             , onChange = ChangedTurningAngle
+            }
+        , WindowPositionX.view
+            { windowPositionX = windowPositionX
+            , onChange = ChangedWindowPositionX
+            }
+        , WindowPositionY.view
+            { windowPositionY = windowPositionY
+            , onChange = ChangedWindowPositionY
             }
         , Canvas.view
             { id = "canvas"
