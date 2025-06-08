@@ -57,7 +57,7 @@ view { axiom, onChange } =
         , label = "Axiom"
         , type_ = Field.Text
         , isRequired = True
-        , placeholder = "F"
+        , placeholder = "F+F+F+F"
         , field = axiom
         , onChange = onChange
         }
