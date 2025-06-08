@@ -12,6 +12,7 @@ import Data.Translator as Translator
 import Html as H
 import Json.Encode as JE
 import View.Canvas as Canvas
+import View.Input.Axiom as Axiom
 
 
 main : Program () Model Msg
@@ -29,7 +30,8 @@ main =
 
 
 type alias Model =
-    { settings : Settings
+    { axiom : String
+    , settings : Settings
     , renderer : Renderer Instruction
     }
 
@@ -41,7 +43,8 @@ init =
             Settings.kochCurve
     in
     always
-        ( { settings = settings
+        ( { axiom = settings.axiom
+          , settings = settings
           , renderer = initRenderer settings
           }
         , Cmd.none
@@ -89,12 +92,18 @@ initRenderer settings =
 
 
 type Msg
-    = ChangedRenderer Renderer.Msg
+    = InputAxiom String
+    | ChangedRenderer Renderer.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        InputAxiom axiom ->
+            ( { model | axiom = axiom }
+            , Cmd.none
+            )
+
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
@@ -117,8 +126,8 @@ subscriptions model =
 -- VIEW
 
 
-view : Model -> H.Html msg
-view { settings, renderer } =
+view : Model -> H.Html Msg
+view { axiom, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -127,7 +136,11 @@ view { settings, renderer } =
             Renderer.toStats renderer
     in
     H.div []
-        [ Canvas.view
+        [ Axiom.view
+            { axiom = axiom
+            , onInput = InputAxiom
+            }
+        , Canvas.view
             { id = "canvas"
             , width = canvasSize
             , height = canvasSize
