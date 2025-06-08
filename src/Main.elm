@@ -12,6 +12,7 @@ import Data.Translator as Translator
 import Html as H
 import Json.Encode as JE
 import View.Canvas as Canvas
+import View.Field as Field
 import View.Input.Axiom as Axiom
 import View.Input.Iterations as Iterations exposing (Iterations)
 
@@ -96,7 +97,7 @@ initRenderer settings =
 
 type Msg
     = InputAxiom String
-    | ChangedIterations Iterations.Msg
+    | ChangedIterations Field.Msg
     | ChangedRenderer Renderer.Msg
 
 
