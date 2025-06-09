@@ -19,6 +19,7 @@ import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
+import View.Rules as Rules exposing (Rules)
 import View.StartHeading as StartHeading exposing (StartHeading)
 import View.TurningAngle as TurningAngle exposing (TurningAngle)
 import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
@@ -41,7 +42,8 @@ main =
 
 
 type alias Model =
-    { axiom : Axiom
+    { rules : Rules
+    , axiom : Axiom
     , iterations : Iterations
     , startHeading : StartHeading
     , lineLength : LineLength
@@ -64,7 +66,8 @@ init =
             Settings.kochCurve
     in
     always
-        ( { axiom = Axiom.init settings.axiom
+        ( { rules = Rules.init
+          , axiom = Axiom.init settings.axiom
           , iterations = Iterations.init settings.iterations
           , startHeading = StartHeading.init settings.startHeading
           , lineLength = LineLength.init settings.lineLength
@@ -123,7 +126,8 @@ initRenderer settings =
 
 
 type Msg
-    = ChangedAxiom Field.Msg
+    = ChangedRules Rules.Msg
+    | ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
     | ChangedStartHeading Field.Msg
     | ChangedLineLength Field.Msg
@@ -140,6 +144,11 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ChangedRules subMsg ->
+            ( { model | rules = Rules.update subMsg model.rules }
+            , Cmd.none
+            )
+
         ChangedAxiom subMsg ->
             ( { model | axiom = Axiom.update subMsg }
             , Cmd.none
@@ -218,7 +227,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } =
+view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } =
     let
         canvasSize =
             settings.canvasSize
@@ -227,7 +236,11 @@ view { axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turni
             Renderer.toStats renderer
     in
     H.div []
-        [ Axiom.view
+        [ Rules.view
+            { rules = rules
+            , onChange = ChangedRules
+            }
+        , Axiom.view
             { axiom = axiom
             , onChange = ChangedAxiom
             }
