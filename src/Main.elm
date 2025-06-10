@@ -19,6 +19,7 @@ import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
+import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
 import View.StartHeading as StartHeading exposing (StartHeading)
 import View.TurningAngle as TurningAngle exposing (TurningAngle)
@@ -61,28 +62,29 @@ type alias Model =
 
 init : () -> ( Model, Cmd msg )
 init =
-    let
-        settings =
-            Settings.kochCurve
-    in
     always
-        ( { rules = Rules.init
-          , axiom = Axiom.init settings.axiom
-          , iterations = Iterations.init settings.iterations
-          , startHeading = StartHeading.init settings.startHeading
-          , lineLength = LineLength.init settings.lineLength
-          , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
-          , turningAngle = TurningAngle.init settings.turningAngle
-          , windowPositionX = WindowPositionX.init settings.windowPosition.x
-          , windowPositionY = WindowPositionX.init settings.windowPosition.y
-          , windowSize = WindowSize.init settings.windowSize
-          , fps = Fps.init settings.fps
-          , ipf = Ipf.init settings.ipf
-          , settings = settings
-          , renderer = initRenderer settings
-          }
+        ( setSettings Settings.kochCurve
         , Cmd.none
         )
+
+
+setSettings : Settings -> Model
+setSettings settings =
+    { rules = Rules.init
+    , axiom = Axiom.init settings.axiom
+    , iterations = Iterations.init settings.iterations
+    , startHeading = StartHeading.init settings.startHeading
+    , lineLength = LineLength.init settings.lineLength
+    , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
+    , turningAngle = TurningAngle.init settings.turningAngle
+    , windowPositionX = WindowPositionX.init settings.windowPosition.x
+    , windowPositionY = WindowPositionX.init settings.windowPosition.y
+    , windowSize = WindowSize.init settings.windowSize
+    , fps = Fps.init settings.fps
+    , ipf = Ipf.init settings.ipf
+    , settings = settings
+    , renderer = initRenderer settings
+    }
 
 
 initRenderer : Settings -> Renderer Instruction
@@ -126,7 +128,8 @@ initRenderer settings =
 
 
 type Msg
-    = ChangedRules Rules.Msg
+    = ChangedSettings Settings
+    | ChangedRules Rules.Msg
     | ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
     | ChangedStartHeading Field.Msg
@@ -144,6 +147,11 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        ChangedSettings settings ->
+            ( setSettings settings
+            , Cmd.none
+            )
+
         ChangedRules subMsg ->
             ( { model | rules = Rules.update subMsg model.rules }
             , Cmd.none
@@ -236,7 +244,10 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
             Renderer.toStats renderer
     in
     H.div []
-        [ Rules.view
+        [ Preset.view
+            { onSettings = ChangedSettings
+            }
+        , Rules.view
             { rules = rules
             , onChange = ChangedRules
             }
