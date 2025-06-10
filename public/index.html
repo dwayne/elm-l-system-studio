@@ -62,6 +62,12 @@
       setCanvasDimensions(canvas, ctx);
       ctx.translate(0.5, 0.5);
 
+      app.ports.clear.subscribe(() => {
+        requestAnimationFrame(() => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        });
+      });
+
       app.ports.draw.subscribe((commands) => {
         requestAnimationFrame(() => {
           ctx.beginPath();

@@ -64,7 +64,7 @@ init : () -> ( Model, Cmd msg )
 init =
     always
         ( setSettings Settings.kochCurve
-        , Cmd.none
+        , clear ()
         )
 
 
@@ -149,7 +149,7 @@ update msg model =
     case msg of
         ChangedSettings settings ->
             ( setSettings settings
-            , Cmd.none
+            , clear ()
             )
 
         ChangedRules subMsg ->
@@ -222,6 +222,7 @@ update msg model =
             )
 
 
+port clear : () -> Cmd msg
 port draw : JE.Value -> Cmd msg
 
 
