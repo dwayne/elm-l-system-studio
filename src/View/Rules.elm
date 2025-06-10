@@ -18,13 +18,25 @@ type alias State =
     }
 
 
-init : Rules
-init =
+init : List ( Char, String ) -> Rules
+init rawMapping =
+    let
+        mapping =
+            rawMapping
+                |> List.filterMap
+                    (\( ch, replacement ) ->
+                        Maybe.map (Tuple.pair ch) (validateRule ch replacement)
+                    )
+                |> List.indexedMap Tuple.pair
+
+        id =
+            List.length mapping
+    in
     Rules
         { ch = 'F'
         , replacement = ""
-        , id = 0
-        , mapping = []
+        , id = id
+        , mapping = mapping
         }
 
 
@@ -41,7 +53,7 @@ update msg (Rules state) =
         SelectedCh chAsString ->
             case String.uncons chAsString of
                 Just ( ch, "" ) ->
-                    if String.any ((==) ch) chars then
+                    if isValidChar ch then
                         Rules { state | ch = ch }
 
                     else
@@ -54,27 +66,18 @@ update msg (Rules state) =
             Rules { state | replacement = replacement }
 
         ClickedAddRule ->
-            let
-                isValidCh =
-                    String.any ((==) state.ch) chars
+            case validateRule state.ch state.replacement of
+                Just trimmedReplacement ->
+                    Rules
+                        { state
+                            | ch = 'F'
+                            , replacement = ""
+                            , id = state.id + 1
+                            , mapping = state.mapping ++ [ ( state.id, ( state.ch, trimmedReplacement ) ) ]
+                        }
 
-                replacement =
-                    String.trim state.replacement
-
-                isValidReplacement =
-                    replacement /= ""
-            in
-            if isValidCh && isValidReplacement then
-                Rules
-                    { state
-                        | ch = 'F'
-                        , replacement = ""
-                        , id = state.id + 1
-                        , mapping = state.mapping ++ [ ( state.id, ( state.ch, replacement ) ) ]
-                    }
-
-            else
-                Rules state
+                Nothing ->
+                    Rules state
 
         ClickedRemoveRule id ->
             let
@@ -82,6 +85,29 @@ update msg (Rules state) =
                     List.filter (Tuple.first >> (/=) id) state.mapping
             in
             Rules { state | mapping = mapping }
+
+
+validateRule : Char -> String -> Maybe String
+validateRule ch replacement =
+    let
+        trimmedReplacement =
+            String.trim replacement
+    in
+    if isValidChar ch && trimmedReplacement /= "" then
+        Just trimmedReplacement
+
+    else
+        Nothing
+
+
+isValidChar : Char -> Bool
+isValidChar ch =
+    String.any ((==) ch) chars
+
+
+chars : String
+chars =
+    "Ff+-|[]#!@{}><&()ABCDEGHIJKLMNOPQRSTUVWXYZabcdeghijklmnopqrstuvwxyz"
 
 
 type alias ViewOptions msg =
@@ -128,11 +154,6 @@ view { rules, onChange } =
                 ]
             , viewMapping mapping
             ]
-
-
-chars : String
-chars =
-    "Ff+-|[]#!@{}><&()abcdeghijklmnopqrstuvwxyz"
 
 
 viewSelect : Char -> H.Html Msg

@@ -70,7 +70,7 @@ init =
 
 setSettings : Settings -> Model
 setSettings settings =
-    { rules = Rules.init
+    { rules = Rules.init settings.rules
     , axiom = Axiom.init settings.axiom
     , iterations = Iterations.init settings.iterations
     , startHeading = StartHeading.init settings.startHeading
@@ -223,6 +223,8 @@ update msg model =
 
 
 port clear : () -> Cmd msg
+
+
 port draw : JE.Value -> Cmd msg
 
 
