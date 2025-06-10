@@ -69,11 +69,12 @@
       const ctx = canvas.getContext("2d");
 
       setCanvasDimensions(canvas, ctx);
-      ctx.translate(0.5, 0.5);
 
       app.ports.clear.subscribe(() => {
         requestAnimationFrame(() => {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.setTransform(1, 0, 0, 1, 0.5, 0.5);
         });
       });
 
