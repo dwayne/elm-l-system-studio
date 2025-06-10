@@ -10,6 +10,7 @@ import Data.Settings as Settings exposing (Settings)
 import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
 import Html as H
+import Html.Attributes as HA
 import Json.Encode as JE
 import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
@@ -246,7 +247,7 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
         { expectedFps, actualFps, cps, expectedIps, actualIps } =
             Renderer.toStats renderer
     in
-    H.div []
+    viewLayout
         [ Preset.view
             { onSettings = ChangedSettings
             }
@@ -298,7 +299,8 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
             { ipf = ipf
             , onChange = ChangedIpf
             }
-        , Canvas.view
+        ]
+        [ Canvas.view
             { id = "canvas"
             , width = canvasSize
             , height = canvasSize
@@ -308,4 +310,12 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
         , H.p [] [ H.text <| "CPS = " ++ String.fromFloat cps ]
         , H.p [] [ H.text <| "Expected IPS = " ++ String.fromFloat expectedIps ]
         , H.p [] [ H.text <| "Actual IPS = " ++ String.fromFloat actualIps ]
+        ]
+
+
+viewLayout : List (H.Html msg) -> List (H.Html msg) -> H.Html msg
+viewLayout region1 region2 =
+    H.div [ HA.class "layout" ]
+        [ H.div [ HA.class "region1" ] region1
+        , H.div [ HA.class "region2" ] region2
         ]
