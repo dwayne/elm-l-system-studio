@@ -224,6 +224,6 @@ vonKochSnowflake =
         , iterations = 4
         , lineLength = 6
         , turningAngle = Angle.fromDegrees 60
-        , windowPosition = { x = -50, y = -150 }
+        , windowPosition = { x = -60, y = -165 }
         , windowSize = 600
     }
