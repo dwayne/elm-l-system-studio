@@ -323,80 +323,85 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
         { expectedFps, actualFps, cps, expectedIps, actualIps } =
             Renderer.toStats renderer
     in
-    viewLayout
-        [ Preset.view
-            { onSettings = ChangedPreset
-            }
-        , Rules.view
-            { rules = rules
-            , onChange = ChangedRules
-            }
-        , Axiom.view
-            { axiom = axiom
-            , onChange = ChangedAxiom
-            }
-        , Iterations.view
-            { iterations = iterations
-            , onChange = ChangedIterations
-            }
-        , StartHeading.view
-            { startHeading = startHeading
-            , onChange = ChangedStartHeading
-            }
-        , LineLength.view
-            { lineLength = lineLength
-            , onChange = ChangedLineLength
-            }
-        , LineLengthScaleFactor.view
-            { lineLengthScaleFactor = lineLengthScaleFactor
-            , onChange = ChangedLineLengthScaleFactor
-            }
-        , TurningAngle.view
-            { turningAngle = turningAngle
-            , onChange = ChangedTurningAngle
-            }
-        , WindowPositionX.view
-            { windowPositionX = windowPositionX
-            , onChange = ChangedWindowPositionX
-            }
-        , WindowPositionY.view
-            { windowPositionY = windowPositionY
-            , onChange = ChangedWindowPositionY
-            }
-        , WindowSize.view
-            { windowSize = windowSize
-            , onChange = ChangedWindowSize
-            }
-        , Fps.view
-            { fps = fps
-            , onChange = ChangedFps
-            }
-        , Ipf.view
-            { ipf = ipf
-            , onChange = ChangedIpf
-            }
-        , H.p []
-            [ H.button
-                [ HA.type_ "button"
-                , if isValid model then
-                    HE.onClick ClickedRender
+    H.div []
+        [ H.h1 [] [ H.text "L-System Studio" ]
+        , viewLayout
+            [ Preset.view
+                { onSettings = ChangedPreset
+                }
+            , Rules.view
+                { rules = rules
+                , onChange = ChangedRules
+                }
+            , Axiom.view
+                { axiom = axiom
+                , onChange = ChangedAxiom
+                }
+            , Iterations.view
+                { iterations = iterations
+                , onChange = ChangedIterations
+                }
+            , StartHeading.view
+                { startHeading = startHeading
+                , onChange = ChangedStartHeading
+                }
+            , LineLength.view
+                { lineLength = lineLength
+                , onChange = ChangedLineLength
+                }
+            , LineLengthScaleFactor.view
+                { lineLengthScaleFactor = lineLengthScaleFactor
+                , onChange = ChangedLineLengthScaleFactor
+                }
+            , TurningAngle.view
+                { turningAngle = turningAngle
+                , onChange = ChangedTurningAngle
+                }
+            , WindowPositionX.view
+                { windowPositionX = windowPositionX
+                , onChange = ChangedWindowPositionX
+                }
+            , WindowPositionY.view
+                { windowPositionY = windowPositionY
+                , onChange = ChangedWindowPositionY
+                }
+            , WindowSize.view
+                { windowSize = windowSize
+                , onChange = ChangedWindowSize
+                }
+            , Fps.view
+                { fps = fps
+                , onChange = ChangedFps
+                }
+            , Ipf.view
+                { ipf = ipf
+                , onChange = ChangedIpf
+                }
+            , H.p []
+                [ H.button
+                    [ HA.type_ "button"
+                    , if isValid model then
+                        HE.onClick ClickedRender
 
-                  else
-                    HA.disabled True
+                      else
+                        HA.disabled True
+                    ]
+                    [ H.text "Render" ]
                 ]
-                [ H.text "Render" ]
             ]
-        ]
-        [ Canvas.view
-            { id = "canvas"
-            , width = canvasSize
-            , height = canvasSize
-            }
-        , H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
-        , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
-        , H.p [] [ H.text <| "CPS = " ++ String.fromFloat cps ]
-        , H.p [] [ H.text <| "Expected IPS = " ++ String.fromFloat expectedIps ]
-        , H.p [] [ H.text <| "Actual IPS = " ++ String.fromFloat actualIps ]
+            [ Canvas.view
+                { id = "canvas"
+                , width = canvasSize
+                , height = canvasSize
+                }
+            , H.div [ HA.class "stats" ]
+                [ H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
+                , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
+                , H.p [] [ H.text <| "CPS = " ++ String.fromFloat cps ]
+                , H.p [] [ H.text <| "Expected IPS = " ++ String.fromFloat expectedIps ]
+                , H.p [] [ H.text <| "Actual IPS = " ++ String.fromFloat actualIps ]
+                ]
+            ]
         ]
 
 

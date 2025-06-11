@@ -139,6 +139,7 @@ view { rules, onChange } =
                 ]
             , H.p []
                 [ viewSelect ch
+                , H.text " "
                 , H.input
                     [ HA.id "replacement"
                     , HA.type_ "text"
@@ -147,6 +148,7 @@ view { rules, onChange } =
                     , HE.onInput InputReplacement
                     ]
                     []
+                , H.text " "
                 , H.button
                     [ HA.type_ "button"
                     , if isDisabled then
