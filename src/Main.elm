@@ -11,7 +11,9 @@ import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
 import Html as H
 import Html.Attributes as HA
+import Html.Events as HE
 import Json.Encode as JE
+import Lib.Maybe as Maybe
 import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
@@ -88,6 +90,67 @@ setSettings settings =
     }
 
 
+updateSettings : Model -> Model
+updateSettings model =
+    let
+        oldSettings =
+            model.settings
+
+        maybeNewSettings =
+            (\axiom iterations startHeading lineLength lineLengthScaleFactor turningAngle windowPositionX windowPositionY windowSize fps ipf ->
+                { oldSettings
+                    | rules = Rules.toValue model.rules
+                    , axiom = axiom
+                    , iterations = iterations
+                    , startHeading = startHeading
+                    , lineLength = lineLength
+                    , lineLengthScaleFactor = lineLengthScaleFactor
+                    , turningAngle = turningAngle
+                    , windowPosition = { x = windowPositionX, y = windowPositionY }
+                    , windowSize = windowSize
+                    , fps = fps
+                    , ipf = ipf
+                }
+            )
+                |> Just
+                |> Maybe.apply (Field.toValue model.axiom)
+                |> Maybe.apply (Field.toValue model.iterations)
+                |> Maybe.apply (Field.toValue model.startHeading)
+                |> Maybe.apply (Field.toValue model.lineLength)
+                |> Maybe.apply (Field.toValue model.lineLengthScaleFactor)
+                |> Maybe.apply (Field.toValue model.turningAngle)
+                |> Maybe.apply (Field.toValue model.windowPositionX)
+                |> Maybe.apply (Field.toValue model.windowPositionY)
+                |> Maybe.apply (Field.toValue model.windowSize)
+                |> Maybe.apply (Field.toValue model.fps)
+                |> Maybe.apply (Field.toValue model.ipf)
+    in
+    case maybeNewSettings of
+        Just newSettings ->
+            { model | settings = newSettings, renderer = initRenderer newSettings }
+
+        Nothing ->
+            model
+
+
+isValid : Model -> Bool
+isValid model =
+    [ Field.toValue model.axiom == Nothing
+    , Field.toValue model.iterations == Nothing
+    , Field.toValue model.startHeading == Nothing
+    , Field.toValue model.lineLength == Nothing
+    , Field.toValue model.lineLengthScaleFactor == Nothing
+    , Field.toValue model.turningAngle == Nothing
+    , Field.toValue model.windowPositionX == Nothing
+    , Field.toValue model.windowPositionY == Nothing
+    , Field.toValue model.windowSize == Nothing
+    , Field.toValue model.fps == Nothing
+    , Field.toValue model.ipf == Nothing
+    ]
+        |> List.filter ((==) True)
+        |> List.isEmpty
+
+
 initRenderer : Settings -> Renderer Instruction
 initRenderer settings =
     let
@@ -129,7 +192,7 @@ initRenderer settings =
 
 
 type Msg
-    = ChangedSettings Settings
+    = ChangedPreset Settings
     | ChangedRules Rules.Msg
     | ChangedAxiom Field.Msg
     | ChangedIterations Field.Msg
@@ -142,14 +205,22 @@ type Msg
     | ChangedWindowSize Field.Msg
     | ChangedFps Field.Msg
     | ChangedIpf Field.Msg
+    | ClickedRender
     | ChangedRenderer Renderer.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ChangedSettings settings ->
-            ( setSettings settings
+        ChangedPreset settings ->
+            ( setSettings
+                { settings
+                  --
+                  -- N.B. Don't change FPS and IPF when the preset is changed.
+                  --
+                    | fps = model.settings.fps
+                    , ipf = model.settings.ipf
+                }
             , clear ()
             )
 
@@ -213,6 +284,11 @@ update msg model =
             , Cmd.none
             )
 
+        ClickedRender ->
+            ( updateSettings model
+            , clear ()
+            )
+
         ChangedRenderer subMsg ->
             let
                 ( renderer, commands ) =
@@ -239,7 +315,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } =
+view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } as model) =
     let
         canvasSize =
             settings.canvasSize
@@ -249,7 +325,7 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
     in
     viewLayout
         [ Preset.view
-            { onSettings = ChangedSettings
+            { onSettings = ChangedPreset
             }
         , Rules.view
             { rules = rules
@@ -299,6 +375,17 @@ view { rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor
             { ipf = ipf
             , onChange = ChangedIpf
             }
+        , H.p []
+            [ H.button
+                [ HA.type_ "button"
+                , if isValid model then
+                    HE.onClick ClickedRender
+
+                  else
+                    HA.disabled True
+                ]
+                [ H.text "Render" ]
+            ]
         ]
         [ Canvas.view
             { id = "canvas"

@@ -1,4 +1,4 @@
-module View.Rules exposing (Msg, Rules, ViewOptions, init, update, view)
+module View.Rules exposing (Msg, Rules, ViewOptions, init, toValue, update, view)
 
 import Html as H
 import Html.Attributes as HA
@@ -38,6 +38,11 @@ init rawMapping =
         , id = id
         , mapping = mapping
         }
+
+
+toValue : Rules -> List ( Char, String )
+toValue (Rules { mapping }) =
+    List.map Tuple.second mapping
 
 
 type Msg

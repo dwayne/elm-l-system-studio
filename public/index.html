@@ -84,13 +84,13 @@
 
           const firstCommand = commands[0];
           if (firstCommand && firstCommand.tag === "line") {
-            console.log("first command = ", firstCommand);
+            // console.log("first command = ", firstCommand);
 
             ctx.moveTo(firstCommand.x1, firstCommand.y1);
           }
 
           commands.forEach((command) => {
-            console.log(command);
+            // console.log(command);
 
             switch (command.tag) {
               case "moveTo":
@@ -102,7 +102,7 @@
                 break;
 
               default:
-                console.log("Unknown command:", command);
+                // console.log("Unknown command:", command);
             }
           });
 

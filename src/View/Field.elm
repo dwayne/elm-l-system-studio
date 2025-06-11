@@ -48,6 +48,19 @@ init { default, toRaw, toProcessed } =
         }
 
 
+toValue : Field a e -> Maybe a
+toValue (Field { processed }) =
+    case processed of
+        Default a ->
+            Just a
+
+        Valid a ->
+            Just a
+
+        Invalid _ ->
+            Nothing
+
+
 type Msg
     = Input String
 
@@ -146,16 +159,3 @@ typeToAttrs type_ =
                 , Just (HA.step "any")
                 , Maybe.map (HA.min << String.fromFloat) min
                 ]
-
-
-toValue : Field a e -> Result e a
-toValue (Field { processed }) =
-    case processed of
-        Default a ->
-            Ok a
-
-        Valid a ->
-            Ok a
-
-        Invalid e ->
-            Err e
