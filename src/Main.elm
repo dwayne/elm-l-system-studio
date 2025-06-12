@@ -90,8 +90,8 @@ setSettings settings =
     }
 
 
-updateSettings : Model -> Model
-updateSettings model =
+render : Model -> ( Model, Cmd msg )
+render model =
     let
         oldSettings =
             model.settings
@@ -127,10 +127,14 @@ updateSettings model =
     in
     case maybeNewSettings of
         Just newSettings ->
-            { model | settings = newSettings, renderer = initRenderer newSettings }
+            ( { model | settings = newSettings, renderer = initRenderer newSettings }
+            , clear ()
+            )
 
         Nothing ->
-            model
+            ( model
+            , Cmd.none
+            )
 
 
 isValid : Model -> Bool
@@ -285,9 +289,7 @@ update msg model =
             )
 
         ClickedRender ->
-            ( updateSettings model
-            , clear ()
-            )
+            render model
 
         ChangedRenderer subMsg ->
             let
