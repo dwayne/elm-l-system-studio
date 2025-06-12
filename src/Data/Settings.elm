@@ -162,7 +162,7 @@ leaf =
         , startHeading = Angle.right
         , lineLengthScaleFactor = 1.36
         , turningAngle = Angle.fromDegrees 45
-        , windowPosition = { x = -300, y = -10 }
+        , windowPosition = { x = -310, y = -10 }
         , windowSize = 600
     }
 
@@ -177,7 +177,7 @@ crystal =
         , iterations = 5
         , lineLength = 5
         , turningAngle = Angle.right
-        , windowPosition = { x = -125, y = -125 }
+        , windowPosition = { x = -140, y = -125 }
         , windowSize = 1500
     }
 
@@ -224,6 +224,6 @@ vonKochSnowflake =
         , iterations = 4
         , lineLength = 6
         , turningAngle = Angle.fromDegrees 60
-        , windowPosition = { x = -60, y = -165 }
+        , windowPosition = { x = -60, y = -160 }
         , windowSize = 600
     }
