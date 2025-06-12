@@ -32,6 +32,7 @@ import View.TurningAngle as TurningAngle exposing (TurningAngle)
 import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
 import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
 import View.WindowSize as WindowSize exposing (WindowSize)
+import View.ZoomIncrement as ZoomIncrement exposing (ZoomIncrement)
 
 
 main : Program () Model Msg
@@ -63,6 +64,7 @@ type alias Model =
     , ipf : Ipf
     , settings : Settings
     , panIncrement : PanIncrement
+    , zoomIncrement : ZoomIncrement
     , renderer : Renderer Instruction
     }
 
@@ -91,6 +93,7 @@ setSettings settings =
     , ipf = Ipf.init settings.ipf
     , settings = settings
     , panIncrement = PanIncrement.init 10
+    , zoomIncrement = ZoomIncrement.init 10
     , renderer = initRenderer settings
     }
 
@@ -160,9 +163,24 @@ isValid model =
         |> List.isEmpty
 
 
-isValidPanIncrement : PanIncrement -> Bool
-isValidPanIncrement panIncrement =
+isValidPanIncrement : Model -> Bool
+isValidPanIncrement { panIncrement } =
     Field.toValue panIncrement /= Nothing
+
+
+isValidZoomIncrement : Bool -> Model -> Bool
+isValidZoomIncrement isZoomingIn { windowSize, zoomIncrement } =
+    (\size inc ->
+        if isZoomingIn then
+            size >= 2 * inc
+
+        else
+            True
+    )
+        |> Just
+        |> Maybe.apply (Field.toValue windowSize)
+        |> Maybe.apply (Field.toValue zoomIncrement)
+        |> Maybe.withDefault False
 
 
 initRenderer : Settings -> Renderer Instruction
@@ -220,6 +238,7 @@ type Msg
     | ChangedFps Field.Msg
     | ChangedIpf Field.Msg
     | ChangedPanIncrement Field.Msg
+    | ChangedZoomIncrement Field.Msg
     | ClickedRender
     | ClickedLeft
     | ClickedRight
@@ -310,6 +329,11 @@ update msg model =
             , Cmd.none
             )
 
+        ChangedZoomIncrement subMsg ->
+            ( { model | zoomIncrement = ZoomIncrement.update subMsg }
+            , Cmd.none
+            )
+
         ClickedRender ->
             render model
 
@@ -348,12 +372,16 @@ update msg model =
         ClickedIn ->
             let
                 maybeWindow =
-                    (\x y size ->
-                        if size >= 20 then
+                    (\x y size inc ->
+                        let
+                            inc2 =
+                                2 * inc
+                        in
+                        if size >= inc2 then
                             Just
-                                { x = x + 10
-                                , y = y + 10
-                                , size = size - 20
+                                { x = x + inc
+                                , y = y + inc
+                                , size = size - inc2
                                 }
 
                         else
@@ -363,6 +391,7 @@ update msg model =
                         |> Maybe.apply (Field.toValue model.windowPositionX)
                         |> Maybe.apply (Field.toValue model.windowPositionY)
                         |> Maybe.apply (Field.toValue model.windowSize)
+                        |> Maybe.apply (Field.toValue model.zoomIncrement)
                         |> Maybe.join
             in
             case maybeWindow of
@@ -380,16 +409,21 @@ update msg model =
         ClickedOut ->
             let
                 maybeWindow =
-                    (\x y size ->
-                        { x = x - 10
-                        , y = y - 10
-                        , size = size + 20
+                    (\x y size inc ->
+                        let
+                            inc2 =
+                                2 * inc
+                        in
+                        { x = x - inc
+                        , y = y - inc
+                        , size = size + inc2
                         }
                     )
                         |> Just
                         |> Maybe.apply (Field.toValue model.windowPositionX)
                         |> Maybe.apply (Field.toValue model.windowPositionY)
                         |> Maybe.apply (Field.toValue model.windowSize)
+                        |> Maybe.apply (Field.toValue model.zoomIncrement)
             in
             case maybeWindow of
                 Just { x, y, size } ->
@@ -429,7 +463,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, panIncrement, renderer } as model) =
+view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, panIncrement, zoomIncrement, renderer } as model) =
     let
         canvasSize =
             settings.canvasSize
@@ -516,7 +550,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text "Pan: "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement panIncrement then
+                    , if isValidPanIncrement model then
                         HE.onClick ClickedLeft
 
                       else
@@ -526,7 +560,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement panIncrement then
+                    , if isValidPanIncrement model then
                         HE.onClick ClickedRight
 
                       else
@@ -536,7 +570,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement panIncrement then
+                    , if isValidPanIncrement model then
                         HE.onClick ClickedUp
 
                       else
@@ -546,7 +580,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement panIncrement then
+                    , if isValidPanIncrement model then
                         HE.onClick ClickedDown
 
                       else
@@ -555,16 +589,28 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                     [ H.text "Down" ]
                 ]
             , H.p []
-                [ H.text "Zoom: "
+                [ ZoomIncrement.view
+                    { zoomIncrement = zoomIncrement
+                    , onChange = ChangedZoomIncrement
+                    }
+                , H.text "Zoom: "
                 , H.button
                     [ HA.type_ "button"
-                    , HE.onClick ClickedIn
+                    , if isValidZoomIncrement True model then
+                        HE.onClick ClickedIn
+
+                      else
+                        HA.disabled True
                     ]
                     [ H.text "In" ]
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , HE.onClick ClickedOut
+                    , if isValidZoomIncrement False model then
+                        HE.onClick ClickedOut
+
+                      else
+                        HA.disabled True
                     ]
                     [ H.text "Out" ]
                 ]
