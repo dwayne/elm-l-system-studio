@@ -225,6 +225,7 @@ type Msg
     | ClickedRight
     | ClickedUp
     | ClickedDown
+    | ClickedIn
     | ClickedOut
     | ChangedRenderer Renderer.Msg
 
@@ -340,6 +341,38 @@ update msg model =
             case Field.toValue model.panIncrement of
                 Just panIncrement ->
                     render { model | windowPositionY = FloatField.changeBy -panIncrement model.windowPositionY }
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ClickedIn ->
+            let
+                maybeWindow =
+                    (\x y size ->
+                        if size >= 20 then
+                            Just
+                                { x = x + 10
+                                , y = y + 10
+                                , size = size - 20
+                                }
+
+                        else
+                            Nothing
+                    )
+                        |> Just
+                        |> Maybe.apply (Field.toValue model.windowPositionX)
+                        |> Maybe.apply (Field.toValue model.windowPositionY)
+                        |> Maybe.apply (Field.toValue model.windowSize)
+                        |> Maybe.join
+            in
+            case maybeWindow of
+                Just { x, y, size } ->
+                    render
+                        { model
+                            | windowPositionX = FloatField.setValue x
+                            , windowPositionY = FloatField.setValue y
+                            , windowSize = NonNegativeFloatField.setValue size
+                        }
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -523,6 +556,12 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 ]
             , H.p []
                 [ H.text "Zoom: "
+                , H.button
+                    [ HA.type_ "button"
+                    , HE.onClick ClickedIn
+                    ]
+                    [ H.text "In" ]
+                , H.text " "
                 , H.button
                     [ HA.type_ "button"
                     , HE.onClick ClickedOut
