@@ -50,6 +50,7 @@ view { id, label, isRequired, placeholder, field, onChange } =
         , type_ =
             Field.Float
                 { min = Nothing
+                , max = Nothing
                 }
         , isRequired = isRequired
         , placeholder = placeholder

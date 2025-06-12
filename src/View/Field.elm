@@ -99,6 +99,7 @@ type Type
         }
     | Float
         { min : Maybe Float
+        , max : Maybe Float
         }
 
 
@@ -152,10 +153,11 @@ typeToAttrs type_ =
                 , Maybe.map (HA.max << String.fromInt) max
                 ]
 
-        Float { min } ->
+        Float { min, max } ->
             List.filterMap
                 identity
                 [ Just (HA.type_ "number")
                 , Just (HA.step "any")
                 , Maybe.map (HA.min << String.fromFloat) min
+                , Maybe.map (HA.max << String.fromFloat) max
                 ]

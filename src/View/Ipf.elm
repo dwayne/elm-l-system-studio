@@ -8,6 +8,11 @@ type alias Ipf =
     Field Int ()
 
 
+maxIpf : Int
+maxIpf =
+    1000000
+
+
 init : Int -> Ipf
 init default =
     Field.init
@@ -15,7 +20,7 @@ init default =
         , toRaw = String.fromInt
         , toProcessed =
             \n ->
-                if n >= 1 && n <= 1000 then
+                if n >= 1 && n <= maxIpf then
                     Field.Default n
 
                 else
@@ -30,7 +35,7 @@ update =
             \raw ->
                 case String.toInt raw of
                     Just n ->
-                        if n >= 1 && n <= 1000 then
+                        if n >= 1 && n <= maxIpf then
                             Field.Valid n
 
                         else
@@ -55,7 +60,7 @@ view { ipf, onChange } =
         , type_ =
             Field.Int
                 { min = Just 1
-                , max = Just 1000
+                , max = Just maxIpf
                 }
         , isRequired = True
         , placeholder = "1"

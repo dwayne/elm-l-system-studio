@@ -1,21 +1,31 @@
-module View.NonNegativeFloatField exposing (NonNegativeFloatField, ViewOptions, init, update, view)
+module View.PanIncrement exposing (PanIncrement, ViewOptions, init, update, view)
 
 import Html as H
 import View.Field as Field exposing (Field)
 
 
-type alias NonNegativeFloatField =
+type alias PanIncrement =
     Field Float ()
 
 
-init : Float -> NonNegativeFloatField
+minPanIncrement : Float
+minPanIncrement =
+    1
+
+
+maxPanIncrement : Float
+maxPanIncrement =
+    1000000
+
+
+init : Float -> PanIncrement
 init default =
     Field.init
         { default = default
         , toRaw = String.fromFloat
         , toProcessed =
             \f ->
-                if f >= 0 then
+                if f >= minPanIncrement && f <= maxPanIncrement then
                     Field.Default f
 
                 else
@@ -23,14 +33,14 @@ init default =
         }
 
 
-update : Field.Msg -> NonNegativeFloatField
+update : Field.Msg -> PanIncrement
 update =
     Field.update
         { toProcessed =
             \raw ->
                 case String.toFloat raw of
                     Just f ->
-                        if f >= 0 then
+                        if f >= minPanIncrement && f <= maxPanIncrement then
                             Field.Valid f
 
                         else
@@ -42,27 +52,23 @@ update =
 
 
 type alias ViewOptions msg =
-    { id : String
-    , label : String
-    , isRequired : Bool
-    , placeholder : String
-    , field : NonNegativeFloatField
+    { panIncrement : PanIncrement
     , onChange : Field.Msg -> msg
     }
 
 
 view : ViewOptions msg -> H.Html msg
-view { id, label, isRequired, placeholder, field, onChange } =
+view { panIncrement, onChange } =
     Field.view
-        { id = id
-        , label = label
+        { id = "panIncrement"
+        , label = "Pan Increment"
         , type_ =
             Field.Float
-                { min = Just 0
-                , max = Nothing
+                { min = Just minPanIncrement
+                , max = Just maxPanIncrement
                 }
-        , isRequired = isRequired
-        , placeholder = placeholder
-        , field = field
+        , isRequired = True
+        , placeholder = String.fromFloat minPanIncrement
+        , field = panIncrement
         , onChange = onChange
         }

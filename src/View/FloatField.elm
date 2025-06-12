@@ -1,4 +1,4 @@
-module View.FloatField exposing (FloatField, ViewOptions, init, update, view)
+module View.FloatField exposing (FloatField, ViewOptions, changeBy, init, update, view)
 
 import Html as H
 import View.Field as Field exposing (Field)
@@ -15,6 +15,20 @@ init default =
         , toRaw = String.fromFloat
         , toProcessed = Field.Default
         }
+
+
+changeBy : Float -> FloatField -> FloatField
+changeBy delta field =
+    case Field.toValue field of
+        Just value ->
+            Field.init
+                { default = value + delta
+                , toRaw = String.fromFloat
+                , toProcessed = Field.Valid
+                }
+
+        Nothing ->
+            field
 
 
 update : Field.Msg -> FloatField
@@ -49,6 +63,7 @@ view { id, label, isRequired, placeholder, field, onChange } =
         , type_ =
             Field.Float
                 { min = Nothing
+                , max = Nothing
                 }
         , isRequired = isRequired
         , placeholder = placeholder

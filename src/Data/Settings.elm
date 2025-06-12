@@ -111,8 +111,8 @@ kochCurve =
         , axiom = "F+F+F+F"
         , iterations = 3
         , turningAngle = Angle.right
-        , windowPosition = { x = -25, y = -25 }
-        , windowSize = 100
+        , windowPosition = { x = -22, y = -22 }
+        , windowSize = 108
     }
 
 

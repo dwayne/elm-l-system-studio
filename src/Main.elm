@@ -17,11 +17,13 @@ import Lib.Maybe as Maybe
 import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
+import View.FloatField as FloatField
 import View.Fps as Fps exposing (Fps)
 import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
+import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
 import View.StartHeading as StartHeading exposing (StartHeading)
@@ -59,6 +61,7 @@ type alias Model =
     , fps : Fps
     , ipf : Ipf
     , settings : Settings
+    , panIncrement : PanIncrement
     , renderer : Renderer Instruction
     }
 
@@ -86,6 +89,7 @@ setSettings settings =
     , fps = Fps.init settings.fps
     , ipf = Ipf.init settings.ipf
     , settings = settings
+    , panIncrement = PanIncrement.init 10
     , renderer = initRenderer settings
     }
 
@@ -155,6 +159,11 @@ isValid model =
         |> List.isEmpty
 
 
+isValidPanIncrement : PanIncrement -> Bool
+isValidPanIncrement panIncrement =
+    Field.toValue panIncrement /= Nothing
+
+
 initRenderer : Settings -> Renderer Instruction
 initRenderer settings =
     let
@@ -209,7 +218,12 @@ type Msg
     | ChangedWindowSize Field.Msg
     | ChangedFps Field.Msg
     | ChangedIpf Field.Msg
+    | ChangedPanIncrement Field.Msg
     | ClickedRender
+    | ClickedLeft
+    | ClickedRight
+    | ClickedUp
+    | ClickedDown
     | ChangedRenderer Renderer.Msg
 
 
@@ -288,8 +302,45 @@ update msg model =
             , Cmd.none
             )
 
+        ChangedPanIncrement subMsg ->
+            ( { model | panIncrement = PanIncrement.update subMsg }
+            , Cmd.none
+            )
+
         ClickedRender ->
             render model
+
+        ClickedLeft ->
+            case Field.toValue model.panIncrement of
+                Just panIncrement ->
+                    render { model | windowPositionX = FloatField.changeBy -panIncrement model.windowPositionX }
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ClickedRight ->
+            case Field.toValue model.panIncrement of
+                Just panIncrement ->
+                    render { model | windowPositionX = FloatField.changeBy panIncrement model.windowPositionX }
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ClickedUp ->
+            case Field.toValue model.panIncrement of
+                Just panIncrement ->
+                    render { model | windowPositionY = FloatField.changeBy panIncrement model.windowPositionY }
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ClickedDown ->
+            case Field.toValue model.panIncrement of
+                Just panIncrement ->
+                    render { model | windowPositionY = FloatField.changeBy -panIncrement model.windowPositionY }
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         ChangedRenderer subMsg ->
             let
@@ -317,7 +368,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, renderer } as model) =
+view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, panIncrement, renderer } as model) =
     let
         canvasSize =
             settings.canvasSize
@@ -396,6 +447,52 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , width = canvasSize
                 , height = canvasSize
                 }
+            , H.p []
+                [ PanIncrement.view
+                    { panIncrement = panIncrement
+                    , onChange = ChangedPanIncrement
+                    }
+                , H.text "Pan: "
+                , H.button
+                    [ HA.type_ "button"
+                    , if isValidPanIncrement panIncrement then
+                        HE.onClick ClickedLeft
+
+                      else
+                        HA.disabled True
+                    ]
+                    [ H.text "Left" ]
+                , H.text " "
+                , H.button
+                    [ HA.type_ "button"
+                    , if isValidPanIncrement panIncrement then
+                        HE.onClick ClickedRight
+
+                      else
+                        HA.disabled True
+                    ]
+                    [ H.text "Right" ]
+                , H.text " "
+                , H.button
+                    [ HA.type_ "button"
+                    , if isValidPanIncrement panIncrement then
+                        HE.onClick ClickedUp
+
+                      else
+                        HA.disabled True
+                    ]
+                    [ H.text "Up" ]
+                , H.text " "
+                , H.button
+                    [ HA.type_ "button"
+                    , if isValidPanIncrement panIncrement then
+                        HE.onClick ClickedDown
+
+                      else
+                        HA.disabled True
+                    ]
+                    [ H.text "Down" ]
+                ]
             , H.div [ HA.class "stats" ]
                 [ H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]
                 , H.p [] [ H.text <| "Actual FPS = " ++ String.fromFloat actualFps ]
