@@ -23,6 +23,7 @@ import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
+import View.NonNegativeFloatField as NonNegativeFloatField
 import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
@@ -224,6 +225,7 @@ type Msg
     | ClickedRight
     | ClickedUp
     | ClickedDown
+    | ClickedOut
     | ChangedRenderer Renderer.Msg
 
 
@@ -338,6 +340,32 @@ update msg model =
             case Field.toValue model.panIncrement of
                 Just panIncrement ->
                     render { model | windowPositionY = FloatField.changeBy -panIncrement model.windowPositionY }
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        ClickedOut ->
+            let
+                maybeWindow =
+                    (\x y size ->
+                        { x = x - 10
+                        , y = y - 10
+                        , size = size + 20
+                        }
+                    )
+                        |> Just
+                        |> Maybe.apply (Field.toValue model.windowPositionX)
+                        |> Maybe.apply (Field.toValue model.windowPositionY)
+                        |> Maybe.apply (Field.toValue model.windowSize)
+            in
+            case maybeWindow of
+                Just { x, y, size } ->
+                    render
+                        { model
+                            | windowPositionX = FloatField.setValue x
+                            , windowPositionY = FloatField.setValue y
+                            , windowSize = NonNegativeFloatField.setValue size
+                        }
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -492,6 +520,14 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                         HA.disabled True
                     ]
                     [ H.text "Down" ]
+                ]
+            , H.p []
+                [ H.text "Zoom: "
+                , H.button
+                    [ HA.type_ "button"
+                    , HE.onClick ClickedOut
+                    ]
+                    [ H.text "Out" ]
                 ]
             , H.div [ HA.class "stats" ]
                 [ H.p [] [ H.text <| "Expected FPS = " ++ String.fromFloat expectedFps ]

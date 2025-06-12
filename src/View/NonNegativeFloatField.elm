@@ -1,4 +1,4 @@
-module View.NonNegativeFloatField exposing (NonNegativeFloatField, ViewOptions, init, update, view)
+module View.NonNegativeFloatField exposing (NonNegativeFloatField, ViewOptions, init, setValue, update, view)
 
 import Html as H
 import View.Field as Field exposing (Field)
@@ -17,6 +17,21 @@ init default =
             \f ->
                 if f >= 0 then
                     Field.Default f
+
+                else
+                    Field.Invalid ()
+        }
+
+
+setValue : Float -> NonNegativeFloatField
+setValue value =
+    Field.init
+        { default = value
+        , toRaw = String.fromFloat
+        , toProcessed =
+            \f ->
+                if f >= 0 then
+                    Field.Valid f
 
                 else
                     Field.Invalid ()

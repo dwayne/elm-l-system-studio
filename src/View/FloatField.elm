@@ -1,4 +1,4 @@
-module View.FloatField exposing (FloatField, ViewOptions, changeBy, init, update, view)
+module View.FloatField exposing (FloatField, ViewOptions, changeBy, init, setValue, update, view)
 
 import Html as H
 import View.Field as Field exposing (Field)
@@ -14,6 +14,15 @@ init default =
         { default = default
         , toRaw = String.fromFloat
         , toProcessed = Field.Default
+        }
+
+
+setValue : Float -> FloatField
+setValue value =
+    Field.init
+        { default = value
+        , toRaw = String.fromFloat
+        , toProcessed = Field.Valid
         }
 
 
