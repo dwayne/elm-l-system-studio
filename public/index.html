@@ -5,62 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1" />
 
     <title>L-System Studio</title>
-    <style>
-      input[type="number"] {
-        width: 90px;
-      }
 
-      @media screen and (min-width: 600px) {
-        .layout {
-          display: flex;
-          gap: 32px;
-        }
-
-        .region1 {
-          min-width: max-content;
-        }
-      }
-
-      .region1 p:first-child {
-        margin-top: 0;
-      }
-
-      [data-state="valid"] {
-        border: 2px solid green;
-      }
-
-      [data-state="invalid"] {
-        border: 2px solid red;
-      }
-
-      .rules {
-        width: max-content;
-
-        background-color: #e9e9ed;
-        border: 1px solid #8f8f9d;
-        padding: 5px;
-      }
-
-      .remove-rule {
-        visibility: hidden;
-      }
-
-      .rule:hover .remove-rule {
-        visibility: visible;
-      }
-
-      .canvas {
-        border: 1px solid #333;
-      }
-
-      .stats {
-        font-size: 12px;
-      }
-
-      .stats p {
-        margin: 4px 0;
-      }
-    </style>
+    <link rel="stylesheet" href="./index.css" />
   </head>
   <body>
     <div id="app"></div>
