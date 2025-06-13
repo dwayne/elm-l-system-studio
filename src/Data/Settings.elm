@@ -1,5 +1,10 @@
 module Data.Settings exposing
     ( Settings
+    , bush1
+    , bush2
+    , bush3
+    , bush4
+    , bush5
     , crystal
     , default
     , kochCurve
@@ -226,4 +231,90 @@ vonKochSnowflake =
         , turningAngle = Angle.fromDegrees 60
         , windowPosition = { x = -60, y = -160 }
         , windowSize = 600
+    }
+
+
+bush1 : Settings
+bush1 =
+    { default
+        | rules =
+            [ ( 'X', "X[-FFF][+FFF]FX" )
+            , ( 'Y', "YFX[+Y][-Y]" )
+            ]
+        , axiom = "Y"
+        , iterations = 5
+        , lineLength = 2
+        , startHeading = Angle.right
+        , turningAngle = Angle.fromDegrees 25.7
+        , windowPosition = { x = -60, y = -4 }
+        , windowSize = 120
+    }
+
+
+bush2 : Settings
+bush2 =
+    { default
+        | rules =
+            [ ( 'F', "FF+[+F-F-F]-[-F+F+F]" )
+            ]
+        , axiom = "F"
+        , iterations = 4
+        , lineLength = 2
+        , startHeading = Angle.right
+        , turningAngle = Angle.fromDegrees 22.5
+        , windowPosition = { x = -70, y = -4 }
+        , windowSize = 120
+    }
+
+
+bush3 : Settings
+bush3 =
+    { default
+        | rules =
+            [ ( 'F', "F[+FF][-FF]F[-F][+F]F" )
+            ]
+        , axiom = "F"
+        , iterations = 4
+        , lineLength = 2
+        , startHeading = Angle.right
+        , turningAngle = Angle.fromDegrees 35
+        , windowPosition = { x = -83, y = -2 }
+        , windowSize = 166
+    }
+
+
+bush4 : Settings
+bush4 =
+    { default
+        | rules =
+            [ ( 'V', "[+++W][---W]YV" )
+            , ( 'W', "+X[-W]Z" )
+            , ( 'X', "-W[+X]Z" )
+            , ( 'Y', "YZ" )
+            , ( 'Z', "[-FFF][+FFF]F" )
+            ]
+        , axiom = "VZFFF"
+        , iterations = 10
+        , lineLength = 2
+        , startHeading = Angle.right
+        , turningAngle = Angle.fromDegrees 20
+        , windowPosition = { x = -48, y = -12 }
+        , windowSize = 102
+    }
+
+
+bush5 : Settings
+bush5 =
+    { default
+        | rules =
+            [ ( 'X', ">[-FX]+FX" )
+            ]
+        , axiom = "FX"
+        , iterations = 10
+        , lineLength = 10
+        , lineLengthScaleFactor = 0.6
+        , startHeading = Angle.right
+        , turningAngle = Angle.fromDegrees 40
+        , windowPosition = { x = -13, y = -1 }
+        , windowSize = 26
     }

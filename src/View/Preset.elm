@@ -19,6 +19,11 @@ presets =
         , ( "tiles", Settings.tiles )
         , ( "tree", Settings.tree )
         , ( "leaf", Settings.leaf )
+        , ( "bush1", Settings.bush1 )
+        , ( "bush2", Settings.bush2 )
+        , ( "bush3", Settings.bush3 )
+        , ( "bush4", Settings.bush4 )
+        , ( "bush5", Settings.bush5 )
         , ( "crystal", Settings.crystal )
         , ( "peanoCurve", Settings.peanoCurve )
         , ( "quadraticSnowflake", Settings.quadraticSnowflake )
@@ -48,6 +53,11 @@ view { onSettings } =
             , H.option [ HA.value "tiles" ] [ H.text "Tiles" ]
             , H.option [ HA.value "tree" ] [ H.text "Tree" ]
             , H.option [ HA.value "leaf" ] [ H.text "Leaf" ]
+            , H.option [ HA.value "bush1" ] [ H.text "Bush 1" ]
+            , H.option [ HA.value "bush2" ] [ H.text "Bush 2" ]
+            , H.option [ HA.value "bush3" ] [ H.text "Bush 3" ]
+            , H.option [ HA.value "bush4" ] [ H.text "Bush 4" ]
+            , H.option [ HA.value "bush5" ] [ H.text "Bush 5" ]
             , H.option [ HA.value "crystal" ] [ H.text "Crystal" ]
             , H.option [ HA.value "peanoCurve" ] [ H.text "Peano Curve" ]
             , H.option [ HA.value "quadraticSnowflake" ] [ H.text "Quadratic Snowflake" ]

@@ -53,20 +53,20 @@ translate dictionary options chars =
             initState options
     in
     Sequence.filterMapWithState
-        (\ch state ->
+        (\ch ( state, stack ) ->
             case Dictionary.find ch dictionary of
                 Just meaning ->
-                    translateMeaning options meaning state
+                    translateMeaning options meaning state stack
 
                 Nothing ->
-                    ( Nothing, state )
+                    ( Nothing, ( state, stack ) )
         )
-        startState
+        ( startState, [] )
         chars
 
 
-translateMeaning : TranslateOptions -> Meaning -> State -> ( Maybe Instruction, State )
-translateMeaning options meaning state =
+translateMeaning : TranslateOptions -> Meaning -> State -> List State -> ( Maybe Instruction, ( State, List State ) )
+translateMeaning options meaning state stack =
     case meaning of
         Move ->
             let
@@ -74,7 +74,7 @@ translateMeaning options meaning state =
                     Turtle.walk state.lineLength state.turtle
             in
             ( Just (Line { start = state.turtle.position, end = turtle.position, lineWidth = state.lineWidth })
-            , { state | turtle = turtle }
+            , ( { state | turtle = turtle }, stack )
             )
 
         MoveWithoutDrawing ->
@@ -83,7 +83,7 @@ translateMeaning options meaning state =
                     Turtle.walk state.lineLength state.turtle
             in
             ( Just (MoveTo turtle.position)
-            , { state | turtle = turtle }
+            , ( { state | turtle = turtle }, stack )
             )
 
         TurnLeft ->
@@ -96,7 +96,7 @@ translateMeaning options meaning state =
                         Turtle.turnLeft
             in
             ( Nothing
-            , { state | turtle = turn state.turningAngle state.turtle }
+            , ( { state | turtle = turn state.turningAngle state.turtle }, stack )
             )
 
         TurnRight ->
@@ -109,37 +109,37 @@ translateMeaning options meaning state =
                         Turtle.turnRight
             in
             ( Nothing
-            , { state | turtle = turn state.turningAngle state.turtle }
+            , ( { state | turtle = turn state.turningAngle state.turtle }, stack )
             )
 
         ReverseDirection ->
             ( Nothing
-            , { state | turtle = Turtle.turnLeft Angle.straight state.turtle }
+            , ( { state | turtle = Turtle.turnLeft Angle.straight state.turtle }, stack )
             )
 
         Push ->
             ( Nothing
-            , { state | stack = state.turtle :: state.stack }
+            , ( state, state :: stack )
             )
 
         Pop ->
-            case state.stack of
+            case stack of
                 [] ->
-                    ( Nothing, state )
+                    ( Nothing, ( state, [] ) )
 
-                turtle :: restStack ->
-                    ( Just (MoveTo turtle.position)
-                    , { state | turtle = turtle, stack = restStack }
+                prevState :: restStack ->
+                    ( Just (MoveTo prevState.turtle.position)
+                    , ( prevState, restStack )
                     )
 
         IncrementLineWidth ->
             ( Nothing
-            , { state | lineWidth = state.lineWidth + options.lineWidthIncrement }
+            , ( { state | lineWidth = state.lineWidth + options.lineWidthIncrement }, stack )
             )
 
         DecrementLineWidth ->
             ( Nothing
-            , { state | lineWidth = state.lineWidth - options.lineWidthIncrement }
+            , ( { state | lineWidth = state.lineWidth - options.lineWidthIncrement }, stack )
             )
 
         DrawDot ->
@@ -153,34 +153,36 @@ translateMeaning options meaning state =
 
         MultiplyLineLength ->
             ( Nothing
-            , { state | lineLength = state.lineLength * options.lineLengthScaleFactor }
+            , ( { state | lineLength = state.lineLength * options.lineLengthScaleFactor }, stack )
             )
 
         DivideLineLength ->
             ( Nothing
-            , { state
-                | lineLength =
-                    if options.lineLengthScaleFactor == 0 then
-                        0
+            , ( { state
+                    | lineLength =
+                        if options.lineLengthScaleFactor == 0 then
+                            0
 
-                    else
-                        state.lineLength / options.lineLengthScaleFactor
-              }
+                        else
+                            state.lineLength / options.lineLengthScaleFactor
+                }
+              , stack
+              )
             )
 
         SwapPlusMinus ->
             ( Nothing
-            , { state | swapPlusMinus = not state.swapPlusMinus }
+            , ( { state | swapPlusMinus = not state.swapPlusMinus }, stack )
             )
 
         IncrementTurningAngle ->
             ( Nothing
-            , { state | turningAngle = Angle.add state.turningAngle options.turningAngleIncrement }
+            , ( { state | turningAngle = Angle.add state.turningAngle options.turningAngleIncrement }, stack )
             )
 
         DecrementTurningAngle ->
             ( Nothing
-            , { state | turningAngle = Angle.sub state.turningAngle options.turningAngleIncrement }
+            , ( { state | turningAngle = Angle.sub state.turningAngle options.turningAngleIncrement }, stack )
             )
 
 
@@ -190,7 +192,6 @@ translateMeaning options meaning state =
 
 type alias State =
     { turtle : Turtle
-    , stack : List Turtle
     , lineLength : Float
     , lineWidth : Float
     , turningAngle : Angle
@@ -201,7 +202,6 @@ type alias State =
 initState : TranslateOptions -> State
 initState options =
     { turtle = Turtle.new options.startPosition options.startHeading
-    , stack = []
     , lineLength = options.lineLength
     , lineWidth = options.lineWidth
     , turningAngle = options.turningAngle
