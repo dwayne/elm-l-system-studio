@@ -1,7 +1,7 @@
 port module Main exposing (main)
 
 import Browser as B
-import Data.Angle as Angle
+import Data.Angle as Angle exposing (Angle)
 import Data.Dictionary as Dictionary
 import Data.Field as F
 import Data.Generator as Generator
@@ -29,8 +29,6 @@ import View.NonNegativeFloatField as NonNegativeFloatField
 import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
-import View.StartHeading as StartHeading exposing (StartHeading)
-import View.TurningAngle as TurningAngle exposing (TurningAngle)
 import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
 import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
 import View.WindowSize as WindowSize exposing (WindowSize)
@@ -59,10 +57,10 @@ type alias Model =
     { rules : Rules
     , axiom : Field String
     , iterations : Field Int
-    , startHeading : StartHeading
+    , startHeading : Field Angle
     , lineLength : LineLength
     , lineLengthScaleFactor : LineLengthScaleFactor
-    , turningAngle : TurningAngle
+    , turningAngle : Field Angle
     , windowPositionX : WindowPositionX
     , windowPositionY : WindowPositionY
     , windowSize : WindowSize
@@ -88,10 +86,10 @@ setSettings settings =
     { rules = Rules.init settings.rules
     , axiom = F.fromString F.nonEmptyString True settings.axiom
     , iterations = F.fromValue F.nonNegativeInt True settings.iterations
-    , startHeading = StartHeading.init settings.startHeading
+    , startHeading = F.fromValue F.angle True settings.startHeading
     , lineLength = LineLength.init settings.lineLength
     , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
-    , turningAngle = TurningAngle.init settings.turningAngle
+    , turningAngle = F.fromValue F.angle True settings.turningAngle
     , windowPositionX = WindowPositionX.init settings.windowPosition.x
     , windowPositionY = WindowPositionX.init settings.windowPosition.y
     , windowSize = WindowSize.init settings.windowSize
@@ -129,10 +127,10 @@ render model =
                 |> Just
                 |> Maybe.apply (F.toMaybe model.axiom)
                 |> Maybe.apply (F.toMaybe model.iterations)
-                |> Maybe.apply (Field.toValue model.startHeading)
+                |> Maybe.apply (F.toMaybe model.startHeading)
                 |> Maybe.apply (Field.toValue model.lineLength)
                 |> Maybe.apply (Field.toValue model.lineLengthScaleFactor)
-                |> Maybe.apply (Field.toValue model.turningAngle)
+                |> Maybe.apply (F.toMaybe model.turningAngle)
                 |> Maybe.apply (Field.toValue model.windowPositionX)
                 |> Maybe.apply (Field.toValue model.windowPositionY)
                 |> Maybe.apply (Field.toValue model.windowSize)
@@ -155,10 +153,10 @@ isValid : Model -> Bool
 isValid model =
     [ F.isInvalid model.axiom
     , F.isInvalid model.iterations
-    , Field.toValue model.startHeading == Nothing
+    , F.isInvalid model.startHeading
     , Field.toValue model.lineLength == Nothing
     , Field.toValue model.lineLengthScaleFactor == Nothing
-    , Field.toValue model.turningAngle == Nothing
+    , F.isInvalid model.turningAngle
     , Field.toValue model.windowPositionX == Nothing
     , Field.toValue model.windowPositionY == Nothing
     , Field.toValue model.windowSize == Nothing
@@ -234,10 +232,10 @@ type Msg
     | ChangedRules Rules.Msg
     | InputAxiom String
     | InputIterations String
-    | ChangedStartHeading Field.Msg
+    | InputStartHeading String
     | ChangedLineLength Field.Msg
     | ChangedLineLengthScaleFactor Field.Msg
-    | ChangedTurningAngle Field.Msg
+    | InputTurningAngle String
     | ChangedWindowPositionX Field.Msg
     | ChangedWindowPositionY Field.Msg
     | ChangedWindowSize Field.Msg
@@ -285,8 +283,8 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedStartHeading subMsg ->
-            ( { model | startHeading = StartHeading.update subMsg }
+        InputStartHeading s ->
+            ( { model | startHeading = F.fromString F.angle False s }
             , Cmd.none
             )
 
@@ -300,8 +298,8 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedTurningAngle subMsg ->
-            ( { model | turningAngle = TurningAngle.update subMsg }
+        InputTurningAngle s ->
+            ( { model | turningAngle = F.fromString F.angle False s }
             , Cmd.none
             )
 
@@ -507,9 +505,15 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , field = iterations
                 , onInput = InputIterations
                 }
-            , StartHeading.view
-                { startHeading = startHeading
-                , onChange = ChangedStartHeading
+            , LabeledInput.view
+                { id = "start-heading"
+                , label = "Start Heading"
+                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "0" ]
+                , field = startHeading
+                , onInput = InputStartHeading
                 }
             , LineLength.view
                 { lineLength = lineLength
@@ -519,9 +523,15 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 { lineLengthScaleFactor = lineLengthScaleFactor
                 , onChange = ChangedLineLengthScaleFactor
                 }
-            , TurningAngle.view
-                { turningAngle = turningAngle
-                , onChange = ChangedTurningAngle
+            , LabeledInput.view
+                { id = "turning-angle"
+                , label = "Turning Angle"
+                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "90" ]
+                , field = turningAngle
+                , onInput = InputTurningAngle
                 }
             , WindowPositionX.view
                 { windowPositionX = windowPositionX
