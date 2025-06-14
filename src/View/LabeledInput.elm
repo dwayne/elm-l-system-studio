@@ -1,4 +1,4 @@
-module Lib.LabeledInput exposing (ViewOptions, view)
+module View.LabeledInput exposing (ViewOptions, view)
 
 import Html as H
 import Html.Attributes as HA
@@ -8,27 +8,26 @@ import Lib.Input as Input
 
 
 type alias ViewOptions e a msg =
-    { label : String
+    { id : String
+    , label : String
     , tipe : Input.Type
     , isRequired : Bool
     , isDisabled : Bool
-    , labelAttrs : List (H.Attribute msg)
-    , inputAttrs : List (H.Attribute msg)
+    , attrs : List (H.Attribute msg)
     , field : Field e a
     , onInput : String -> msg
     }
 
 
 view : ViewOptions e a msg -> H.Html msg
-view { label, tipe, isRequired, isDisabled, labelAttrs, inputAttrs, field, onInput } =
-    H.label labelAttrs
-        [ H.text label
-        , H.text ": "
+view { id, label, tipe, isRequired, isDisabled, attrs, field, onInput } =
+    H.p []
+        [ H.label [ HA.for id ] [ H.text (label ++ ": ") ]
         , Input.view
             { tipe = tipe
             , isRequired = isRequired
             , isDisabled = isDisabled
-            , attrs = inputAttrs
+            , attrs = attrs ++ [ HA.id id ]
             , field = field
             , onInput = onInput
             }

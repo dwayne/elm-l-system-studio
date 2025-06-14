@@ -3,6 +3,7 @@ port module Main exposing (main)
 import Browser as B
 import Data.Angle as Angle
 import Data.Dictionary as Dictionary
+import Data.Field as F
 import Data.Generator as Generator
 import Data.Position exposing (Position)
 import Data.Renderer as Renderer exposing (Renderer)
@@ -13,14 +14,16 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Encode as JE
+import Lib.Field as F
+import Lib.Input as Input
 import Lib.Maybe as Maybe
-import View.Axiom as Axiom exposing (Axiom)
 import View.Canvas as Canvas
 import View.Field as Field
 import View.FloatField as FloatField
 import View.Fps as Fps exposing (Fps)
 import View.Ipf as Ipf exposing (Ipf)
 import View.Iterations as Iterations exposing (Iterations)
+import View.LabeledInput as LabeledInput
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
 import View.NonNegativeFloatField as NonNegativeFloatField
@@ -49,9 +52,13 @@ main =
 -- MODEL
 
 
+type alias Field a =
+    F.Field () a
+
+
 type alias Model =
     { rules : Rules
-    , axiom : Axiom
+    , axiom : Field String
     , iterations : Iterations
     , startHeading : StartHeading
     , lineLength : LineLength
@@ -80,7 +87,7 @@ init =
 setSettings : Settings -> Model
 setSettings settings =
     { rules = Rules.init settings.rules
-    , axiom = Axiom.init settings.axiom
+    , axiom = F.fromString F.nonEmptyString True settings.axiom
     , iterations = Iterations.init settings.iterations
     , startHeading = StartHeading.init settings.startHeading
     , lineLength = LineLength.init settings.lineLength
@@ -121,7 +128,7 @@ render model =
                 }
             )
                 |> Just
-                |> Maybe.apply (Field.toValue model.axiom)
+                |> Maybe.apply (F.toMaybe model.axiom)
                 |> Maybe.apply (Field.toValue model.iterations)
                 |> Maybe.apply (Field.toValue model.startHeading)
                 |> Maybe.apply (Field.toValue model.lineLength)
@@ -147,7 +154,7 @@ render model =
 
 isValid : Model -> Bool
 isValid model =
-    [ Field.toValue model.axiom == Nothing
+    [ F.isInvalid model.axiom
     , Field.toValue model.iterations == Nothing
     , Field.toValue model.startHeading == Nothing
     , Field.toValue model.lineLength == Nothing
@@ -226,7 +233,7 @@ initRenderer settings =
 type Msg
     = ChangedPreset Settings
     | ChangedRules Rules.Msg
-    | ChangedAxiom Field.Msg
+    | InputAxiom String
     | ChangedIterations Field.Msg
     | ChangedStartHeading Field.Msg
     | ChangedLineLength Field.Msg
@@ -269,8 +276,8 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedAxiom subMsg ->
-            ( { model | axiom = Axiom.update subMsg }
+        InputAxiom s ->
+            ( { model | axiom = F.fromString F.nonEmptyString False s }
             , Cmd.none
             )
 
@@ -481,9 +488,15 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 { rules = rules
                 , onChange = ChangedRules
                 }
-            , Axiom.view
-                { axiom = axiom
-                , onChange = ChangedAxiom
+            , LabeledInput.view
+                { id = "axiom"
+                , label = "Axiom"
+                , tipe = Input.String
+                , isRequired = True
+                , isDisabled = False
+                , attrs = []
+                , field = axiom
+                , onInput = InputAxiom
                 }
             , Iterations.view
                 { iterations = iterations

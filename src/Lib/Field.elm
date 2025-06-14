@@ -24,8 +24,9 @@ module Lib.Field exposing
     , positiveInt
     , required
     , string
+    , toMaybe
+    , toResult
     , toString
-    , toValue
     , trim
     , validationError
     )
@@ -347,9 +348,14 @@ toString (Field { raw }) =
             s
 
 
-toValue : Field e a -> Result (Error e) a
-toValue (Field { processed }) =
+toResult : Field e a -> Result (Error e) a
+toResult (Field { processed }) =
     processed
+
+
+toMaybe : Field e a -> Maybe a
+toMaybe (Field { processed }) =
+    Result.toMaybe processed
 
 
 mapError : (e1 -> e2) -> Field e1 a -> Field e2 a

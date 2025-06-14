@@ -17,11 +17,14 @@ input[type="number"] {
   margin-top: 0;
 }
 
-[data-state="valid"] {
+[data-state="valid"],
+[data-validity="valid"],
+{
   border: 2px solid green;
 }
 
-[data-state="invalid"] {
+[data-state="invalid"],
+[data-validity="invalid"] {
   border: 2px solid red;
 }
 
