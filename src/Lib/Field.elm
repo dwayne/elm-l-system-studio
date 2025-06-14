@@ -10,6 +10,7 @@ module Lib.Field exposing
     , isDirty
     , isInvalid
     , isValid
+    , mapError
     , nonEmptyString
     , nonNegativeFloat
     , nonNegativeInt
@@ -49,9 +50,9 @@ type Error e
 
 
 
---
--- TODO: Flesh out ValidationError.
---
+---
+--- TODO: Flesh out ValidationError.
+---
 
 
 type alias Type e a =
@@ -344,3 +345,27 @@ toString (Field { raw }) =
 toValue : Field e a -> Result (Error e) a
 toValue (Field { processed }) =
     processed
+
+
+mapError : (e1 -> e2) -> Field e1 a -> Field e2 a
+mapError f (Field state) =
+    Field
+        { raw = state.raw
+        , processed =
+            Result.mapError
+                (\error ->
+                    case error of
+                        Required ->
+                            Required
+
+                        ParseError ->
+                            ParseError
+
+                        ValidationError ->
+                            ValidationError
+
+                        Custom e1 ->
+                            Custom (f e1)
+                )
+                state.processed
+        }
