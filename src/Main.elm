@@ -494,7 +494,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , tipe = Input.String
                 , isRequired = True
                 , isDisabled = False
-                , attrs = []
+                , attrs = [ HA.placeholder "F+F+F+F" ]
                 , field = axiom
                 , onInput = InputAxiom
                 }
@@ -504,7 +504,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , tipe = Input.Int { min = Just 0, max = Nothing }
                 , isRequired = True
                 , isDisabled = False
-                , attrs = []
+                , attrs = [ HA.placeholder "3" ]
                 , field = iterations
                 , onInput = InputIterations
                 }
