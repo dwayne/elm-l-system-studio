@@ -1,6 +1,7 @@
 module Lib.Field exposing
     ( Field
     , Type
+    , boundedFloat
     , boundedInt
     , float
     , fromString
@@ -168,6 +169,18 @@ positiveFloat =
     customFloat
         (\f ->
             if f > 0 then
+                Ok f
+
+            else
+                validationError
+        )
+
+
+boundedFloat : { min : Float, max : Float } -> Type e Float
+boundedFloat { min, max } =
+    customFloat
+        (\f ->
+            if min <= f && f <= max then
                 Ok f
 
             else
