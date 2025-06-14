@@ -22,7 +22,6 @@ import View.Field as Field
 import View.FloatField as FloatField
 import View.Fps as Fps exposing (Fps)
 import View.Ipf as Ipf exposing (Ipf)
-import View.Iterations as Iterations exposing (Iterations)
 import View.LabeledInput as LabeledInput
 import View.LineLength as LineLength exposing (LineLength)
 import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
