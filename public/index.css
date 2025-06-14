@@ -18,8 +18,7 @@ input[type="number"] {
 }
 
 [data-state="valid"],
-[data-validity="valid"],
-{
+input[data-state="dirty"][data-validity="valid"] {
   border: 2px solid green;
 }
 
