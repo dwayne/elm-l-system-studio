@@ -1,101 +1,38 @@
 module Lib.Field exposing
-    ( Config
-    , Field
+    ( Field
+    , Type
+    , boundedInt
     , float
     , fromString
     , fromValue
     , int
     , isClean
     , isDirty
+    , isInvalid
+    , isValid
     , nonEmptyString
+    , nonNegativeFloat
     , nonNegativeInt
-    , setFromString
-    , setFromValue
+    , optionalFloat
+    , optionalInt
+    , parseError
+    , positiveFloat
+    , positiveInt
+    , required
     , string
     , toString
     , toValue
+    , validationError
     )
 
 
 type Field e a
-    = Field (Config e a) (State e a)
-
-
-type alias Config e a =
-    { toString : a -> String
-    , toValue : String -> Result e a
-    , validate : a -> Result e a
-    }
-
-
-int : Config () Int
-int =
-    { toString = String.fromInt
-    , toValue = String.toInt >> Result.fromMaybe ()
-    , validate = Ok
-    }
-
-
-nonNegativeInt : Config () Int
-nonNegativeInt =
-    let
-        validate n =
-            if n >= 0 then
-                Ok n
-
-            else
-                error
-    in
-    { toString = String.fromInt
-    , toValue = String.toInt >> Maybe.map validate >> Maybe.withDefault error
-    , validate = validate
-    }
-
-
-float : Config () Float
-float =
-    { toString = String.fromFloat
-    , toValue = String.toFloat >> Result.fromMaybe ()
-    , validate = Ok
-    }
-
-
-string : Config () String
-string =
-    { toString = identity
-    , toValue = Ok
-    , validate = Ok
-    }
-
-
-nonEmptyString : Config () String
-nonEmptyString =
-    let
-        validate s =
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                error
-
-            else
-                Ok t
-    in
-    { toString = identity
-    , toValue = validate
-    , validate = validate
-    }
-
-
-error : Result () a
-error =
-    Err ()
+    = Field (State e a)
 
 
 type alias State e a =
     { raw : Raw
-    , processed : Result e a
+    , processed : Result (Error e) a
     }
 
 
@@ -104,24 +41,258 @@ type Raw
     | Dirty String
 
 
-fromString : String -> Config e a -> Field e a
-fromString s config =
-    Field config
-        { raw = Initial s
-        , processed = config.toValue s
+type Error e
+    = Required
+    | ParseError
+    | ValidationError
+    | Custom e
+
+
+
+--
+-- TODO: Flesh out ValidationError.
+--
+
+
+type alias Type e a =
+    { toString : a -> String
+    , toValue : String -> Result (Error e) a
+    , validate : a -> Result (Error e) a
+    }
+
+
+int : Type e Int
+int =
+    customInt Ok
+
+
+nonNegativeInt : Type e Int
+nonNegativeInt =
+    customInt
+        (\n ->
+            if n >= 0 then
+                Ok n
+
+            else
+                validationError
+        )
+
+
+positiveInt : Type e Int
+positiveInt =
+    customInt
+        (\n ->
+            if n > 0 then
+                Ok n
+
+            else
+                validationError
+        )
+
+
+boundedInt : { min : Int, max : Int } -> Type e Int
+boundedInt { min, max } =
+    customInt
+        (\n ->
+            if min <= n && n <= max then
+                Ok n
+
+            else
+                validationError
+        )
+
+
+customInt : (Int -> Result (Error e) Int) -> Type e Int
+customInt validate =
+    { toString = String.fromInt
+    , toValue =
+        \s ->
+            let
+                t =
+                    String.trim s
+            in
+            if t == "" then
+                required
+
+            else
+                String.toInt t
+                    |> Maybe.map validate
+                    |> Maybe.withDefault parseError
+    , validate = validate
+    }
+
+
+optionalInt : Type e (Maybe Int)
+optionalInt =
+    { toString = Maybe.map String.fromInt >> Maybe.withDefault ""
+    , toValue =
+        \s ->
+            let
+                t =
+                    String.trim s
+            in
+            if t == "" then
+                Ok Nothing
+
+            else
+                case String.toInt t of
+                    Just n ->
+                        Ok (Just n)
+
+                    Nothing ->
+                        parseError
+    , validate = Ok
+    }
+
+
+float : Type e Float
+float =
+    customFloat Ok
+
+
+nonNegativeFloat : Type e Float
+nonNegativeFloat =
+    customFloat
+        (\f ->
+            if f >= 0 then
+                Ok f
+
+            else
+                validationError
+        )
+
+
+positiveFloat : Type e Float
+positiveFloat =
+    customFloat
+        (\f ->
+            if f > 0 then
+                Ok f
+
+            else
+                validationError
+        )
+
+
+customFloat : (Float -> Result (Error e) Float) -> Type e Float
+customFloat validate =
+    { toString = String.fromFloat
+    , toValue =
+        \s ->
+            let
+                t =
+                    String.trim s
+            in
+            if t == "" then
+                required
+
+            else
+                String.toFloat t
+                    |> Maybe.map validate
+                    |> Maybe.withDefault parseError
+    , validate = validate
+    }
+
+
+optionalFloat : Type e (Maybe Float)
+optionalFloat =
+    { toString = Maybe.map String.fromFloat >> Maybe.withDefault ""
+    , toValue =
+        \s ->
+            let
+                t =
+                    String.trim s
+            in
+            if t == "" then
+                Ok Nothing
+
+            else
+                case String.toFloat t of
+                    Just f ->
+                        Ok (Just f)
+
+                    Nothing ->
+                        parseError
+    , validate = Ok
+    }
+
+
+string : Type e String
+string =
+    customString (String.trim >> Ok)
+
+
+nonEmptyString : Type e String
+nonEmptyString =
+    customString
+        (\s ->
+            let
+                t =
+                    String.trim s
+            in
+            if t == "" then
+                required
+
+            else
+                Ok t
+        )
+
+
+customString : (String -> Result (Error e) String) -> Type e String
+customString validate =
+    { toString = identity
+    , toValue = validate
+    , validate = validate
+    }
+
+
+required : Result (Error e) a
+required =
+    Err Required
+
+
+parseError : Result (Error e) a
+parseError =
+    Err ParseError
+
+
+validationError : Result (Error e) a
+validationError =
+    Err ValidationError
+
+
+fromString : Type e a -> Bool -> String -> Field e a
+fromString tipe isInitial s =
+    Field
+        { raw =
+            (if isInitial then
+                Initial
+
+             else
+                Dirty
+            )
+                s
+        , processed = tipe.toValue s
         }
 
 
-fromValue : a -> Config e a -> Field e a
-fromValue value config =
-    Field config
-        { raw = Initial (config.toString value)
-        , processed = config.validate value
+fromValue : Type e a -> Bool -> a -> Field e a
+fromValue tipe isInitial value =
+    Field
+        { raw =
+            (if isInitial then
+                Initial
+
+             else
+                Dirty
+            )
+                (tipe.toString value)
+        , processed = tipe.validate value
         }
 
 
 isClean : Field e a -> Bool
-isClean (Field _ { raw }) =
+isClean (Field { raw }) =
     case raw of
         Initial _ ->
             True
@@ -131,7 +302,7 @@ isClean (Field _ { raw }) =
 
 
 isDirty : Field e a -> Bool
-isDirty (Field _ { raw }) =
+isDirty (Field { raw }) =
     case raw of
         Dirty _ ->
             True
@@ -140,24 +311,28 @@ isDirty (Field _ { raw }) =
             False
 
 
-setFromString : String -> Field e a -> Field e a
-setFromString s (Field config state) =
-    Field config
-        { raw = Dirty s
-        , processed = config.toValue s
-        }
+isValid : Field e a -> Bool
+isValid (Field { processed }) =
+    case processed of
+        Ok _ ->
+            True
+
+        _ ->
+            False
 
 
-setFromValue : a -> Field e a -> Field e a
-setFromValue value (Field config state) =
-    Field config
-        { raw = Dirty (config.toString value)
-        , processed = config.validate value
-        }
+isInvalid : Field e a -> Bool
+isInvalid (Field { processed }) =
+    case processed of
+        Err _ ->
+            True
+
+        _ ->
+            False
 
 
 toString : Field e a -> String
-toString (Field _ { raw }) =
+toString (Field { raw }) =
     case raw of
         Initial s ->
             s
@@ -166,6 +341,6 @@ toString (Field _ { raw }) =
             s
 
 
-toValue : Field e a -> Result e a
-toValue (Field _ { processed }) =
+toValue : Field e a -> Result (Error e) a
+toValue (Field { processed }) =
     processed
