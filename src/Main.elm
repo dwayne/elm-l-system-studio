@@ -23,15 +23,11 @@ import View.FloatField as FloatField
 import View.Fps as Fps exposing (Fps)
 import View.Ipf as Ipf exposing (Ipf)
 import View.LabeledInput as LabeledInput
-import View.LineLength as LineLength exposing (LineLength)
-import View.LineLengthScaleFactor as LineLengthScaleFactor exposing (LineLengthScaleFactor)
-import View.NonNegativeFloatField as NonNegativeFloatField
 import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
 import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
 import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
-import View.WindowSize as WindowSize exposing (WindowSize)
 import View.ZoomIncrement as ZoomIncrement exposing (ZoomIncrement)
 
 
@@ -58,12 +54,12 @@ type alias Model =
     , axiom : Field String
     , iterations : Field Int
     , startHeading : Field Angle
-    , lineLength : LineLength
-    , lineLengthScaleFactor : LineLengthScaleFactor
+    , lineLength : Field Float
+    , lineLengthScaleFactor : Field Float
     , turningAngle : Field Angle
     , windowPositionX : WindowPositionX
     , windowPositionY : WindowPositionY
-    , windowSize : WindowSize
+    , windowSize : Field Float
     , fps : Fps
     , ipf : Ipf
     , settings : Settings
@@ -87,12 +83,12 @@ setSettings settings =
     , axiom = F.fromString F.nonEmptyString True settings.axiom
     , iterations = F.fromValue F.nonNegativeInt True settings.iterations
     , startHeading = F.fromValue F.angle True settings.startHeading
-    , lineLength = LineLength.init settings.lineLength
-    , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
+    , lineLength = F.fromValue F.nonNegativeFloat True settings.lineLength
+    , lineLengthScaleFactor = F.fromValue F.nonNegativeFloat True settings.lineLengthScaleFactor
     , turningAngle = F.fromValue F.angle True settings.turningAngle
     , windowPositionX = WindowPositionX.init settings.windowPosition.x
     , windowPositionY = WindowPositionX.init settings.windowPosition.y
-    , windowSize = WindowSize.init settings.windowSize
+    , windowSize = F.fromValue F.nonNegativeFloat True settings.windowSize
     , fps = Fps.init settings.fps
     , ipf = Ipf.init settings.ipf
     , settings = settings
@@ -128,12 +124,12 @@ render model =
                 |> Maybe.apply (F.toMaybe model.axiom)
                 |> Maybe.apply (F.toMaybe model.iterations)
                 |> Maybe.apply (F.toMaybe model.startHeading)
-                |> Maybe.apply (Field.toValue model.lineLength)
-                |> Maybe.apply (Field.toValue model.lineLengthScaleFactor)
+                |> Maybe.apply (F.toMaybe model.lineLength)
+                |> Maybe.apply (F.toMaybe model.lineLengthScaleFactor)
                 |> Maybe.apply (F.toMaybe model.turningAngle)
                 |> Maybe.apply (Field.toValue model.windowPositionX)
                 |> Maybe.apply (Field.toValue model.windowPositionY)
-                |> Maybe.apply (Field.toValue model.windowSize)
+                |> Maybe.apply (F.toMaybe model.windowSize)
                 |> Maybe.apply (Field.toValue model.fps)
                 |> Maybe.apply (Field.toValue model.ipf)
     in
@@ -154,12 +150,12 @@ isValid model =
     [ F.isInvalid model.axiom
     , F.isInvalid model.iterations
     , F.isInvalid model.startHeading
-    , Field.toValue model.lineLength == Nothing
-    , Field.toValue model.lineLengthScaleFactor == Nothing
+    , F.isInvalid model.lineLength
+    , F.isInvalid model.lineLengthScaleFactor
     , F.isInvalid model.turningAngle
     , Field.toValue model.windowPositionX == Nothing
     , Field.toValue model.windowPositionY == Nothing
-    , Field.toValue model.windowSize == Nothing
+    , F.isInvalid model.windowSize
     , Field.toValue model.fps == Nothing
     , Field.toValue model.ipf == Nothing
     ]
@@ -182,7 +178,7 @@ isValidZoomIncrement isZoomingIn { windowSize, zoomIncrement } =
             True
     )
         |> Just
-        |> Maybe.apply (Field.toValue windowSize)
+        |> Maybe.apply (F.toMaybe windowSize)
         |> Maybe.apply (Field.toValue zoomIncrement)
         |> Maybe.withDefault False
 
@@ -233,12 +229,12 @@ type Msg
     | InputAxiom String
     | InputIterations String
     | InputStartHeading String
-    | ChangedLineLength Field.Msg
-    | ChangedLineLengthScaleFactor Field.Msg
+    | InputLineLength String
+    | InputLineLengthScaleFactor String
     | InputTurningAngle String
     | ChangedWindowPositionX Field.Msg
     | ChangedWindowPositionY Field.Msg
-    | ChangedWindowSize Field.Msg
+    | InputWindowSize String
     | ChangedFps Field.Msg
     | ChangedIpf Field.Msg
     | ChangedPanIncrement Field.Msg
@@ -288,13 +284,13 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedLineLength subMsg ->
-            ( { model | lineLength = LineLength.update subMsg }
+        InputLineLength s ->
+            ( { model | lineLength = F.fromString F.nonNegativeFloat False s }
             , Cmd.none
             )
 
-        ChangedLineLengthScaleFactor subMsg ->
-            ( { model | lineLengthScaleFactor = LineLengthScaleFactor.update subMsg }
+        InputLineLengthScaleFactor s ->
+            ( { model | lineLengthScaleFactor = F.fromString F.nonNegativeFloat False s }
             , Cmd.none
             )
 
@@ -313,8 +309,8 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedWindowSize subMsg ->
-            ( { model | windowSize = WindowSize.update subMsg }
+        InputWindowSize s ->
+            ( { model | windowSize = F.fromString F.nonNegativeFloat False s }
             , Cmd.none
             )
 
@@ -394,7 +390,7 @@ update msg model =
                         |> Just
                         |> Maybe.apply (Field.toValue model.windowPositionX)
                         |> Maybe.apply (Field.toValue model.windowPositionY)
-                        |> Maybe.apply (Field.toValue model.windowSize)
+                        |> Maybe.apply (F.toMaybe model.windowSize)
                         |> Maybe.apply (Field.toValue model.zoomIncrement)
                         |> Maybe.join
             in
@@ -404,7 +400,7 @@ update msg model =
                         { model
                             | windowPositionX = FloatField.setValue x
                             , windowPositionY = FloatField.setValue y
-                            , windowSize = NonNegativeFloatField.setValue size
+                            , windowSize = F.fromValue F.nonNegativeFloat False size
                         }
 
                 Nothing ->
@@ -426,7 +422,7 @@ update msg model =
                         |> Just
                         |> Maybe.apply (Field.toValue model.windowPositionX)
                         |> Maybe.apply (Field.toValue model.windowPositionY)
-                        |> Maybe.apply (Field.toValue model.windowSize)
+                        |> Maybe.apply (F.toMaybe model.windowSize)
                         |> Maybe.apply (Field.toValue model.zoomIncrement)
             in
             case maybeWindow of
@@ -435,7 +431,7 @@ update msg model =
                         { model
                             | windowPositionX = FloatField.setValue x
                             , windowPositionY = FloatField.setValue y
-                            , windowSize = NonNegativeFloatField.setValue size
+                            , windowSize = F.fromValue F.nonNegativeFloat False size
                         }
 
                 Nothing ->
@@ -515,13 +511,25 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , field = startHeading
                 , onInput = InputStartHeading
                 }
-            , LineLength.view
-                { lineLength = lineLength
-                , onChange = ChangedLineLength
+            , LabeledInput.view
+                { id = "line-length"
+                , label = "Line Length"
+                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "1" ]
+                , field = lineLength
+                , onInput = InputLineLength
                 }
-            , LineLengthScaleFactor.view
-                { lineLengthScaleFactor = lineLengthScaleFactor
-                , onChange = ChangedLineLengthScaleFactor
+            , LabeledInput.view
+                { id = "line-length-scale-factor"
+                , label = "Line Length Scale Factor"
+                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "1" ]
+                , field = lineLengthScaleFactor
+                , onInput = InputLineLengthScaleFactor
                 }
             , LabeledInput.view
                 { id = "turning-angle"
@@ -541,9 +549,15 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 { windowPositionY = windowPositionY
                 , onChange = ChangedWindowPositionY
                 }
-            , WindowSize.view
-                { windowSize = windowSize
-                , onChange = ChangedWindowSize
+            , LabeledInput.view
+                { id = "window-size"
+                , label = "Window Size"
+                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "100" ]
+                , field = windowSize
+                , onInput = InputWindowSize
                 }
             , Fps.view
                 { fps = fps
