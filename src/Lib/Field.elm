@@ -9,6 +9,7 @@ module Lib.Field exposing
     , int
     , isClean
     , isDirty
+    , isEmpty
     , isInvalid
     , isValid
     , mapError
@@ -284,6 +285,16 @@ fromValue tipe isInitial value =
                 (tipe.toString value)
         , processed = tipe.validate value
         }
+
+
+isEmpty : Field e a -> Bool
+isEmpty (Field { raw }) =
+    case raw of
+        Initial s ->
+            String.isEmpty s
+
+        Dirty s ->
+            String.isEmpty s
 
 
 isClean : Field e a -> Bool
