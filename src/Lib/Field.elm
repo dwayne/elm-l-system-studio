@@ -15,6 +15,7 @@ module Lib.Field exposing
     , nonEmptyString
     , nonNegativeFloat
     , nonNegativeInt
+    , optional
     , optionalFloat
     , optionalInt
     , parseError
@@ -24,6 +25,7 @@ module Lib.Field exposing
     , string
     , toString
     , toValue
+    , trim
     , validationError
     )
 
@@ -107,19 +109,7 @@ boundedInt { min, max } =
 customInt : (Int -> Result (Error e) Int) -> Type e Int
 customInt validate =
     { toString = String.fromInt
-    , toValue =
-        \s ->
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                required
-
-            else
-                String.toInt t
-                    |> Maybe.map validate
-                    |> Maybe.withDefault parseError
+    , toValue = trim >> Result.andThen (String.toInt >> Maybe.map validate >> Maybe.withDefault parseError)
     , validate = validate
     }
 
@@ -128,21 +118,15 @@ optionalInt : Type e (Maybe Int)
 optionalInt =
     { toString = Maybe.map String.fromInt >> Maybe.withDefault ""
     , toValue =
-        \s ->
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                Ok Nothing
-
-            else
-                case String.toInt t of
+        optional
+            (\s ->
+                case String.toInt s of
                     Just n ->
                         Ok (Just n)
 
                     Nothing ->
                         parseError
+            )
     , validate = Ok
     }
 
@@ -191,19 +175,7 @@ boundedFloat { min, max } =
 customFloat : (Float -> Result (Error e) Float) -> Type e Float
 customFloat validate =
     { toString = String.fromFloat
-    , toValue =
-        \s ->
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                required
-
-            else
-                String.toFloat t
-                    |> Maybe.map validate
-                    |> Maybe.withDefault parseError
+    , toValue = trim >> Result.andThen (String.toFloat >> Maybe.map validate >> Maybe.withDefault parseError)
     , validate = validate
     }
 
@@ -212,21 +184,15 @@ optionalFloat : Type e (Maybe Float)
 optionalFloat =
     { toString = Maybe.map String.fromFloat >> Maybe.withDefault ""
     , toValue =
-        \s ->
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                Ok Nothing
-
-            else
-                case String.toFloat t of
+        optional
+            (\s ->
+                case String.toFloat s of
                     Just f ->
                         Ok (Just f)
 
                     Nothing ->
                         parseError
+            )
     , validate = Ok
     }
 
@@ -238,18 +204,7 @@ string =
 
 nonEmptyString : Type e String
 nonEmptyString =
-    customString
-        (\s ->
-            let
-                t =
-                    String.trim s
-            in
-            if t == "" then
-                required
-
-            else
-                Ok t
-        )
+    customString trim
 
 
 customString : (String -> Result (Error e) String) -> Type e String
@@ -258,6 +213,32 @@ customString validate =
     , toValue = validate
     , validate = validate
     }
+
+
+trim : String -> Result (Error e) String
+trim s =
+    let
+        t =
+            String.trim s
+    in
+    if String.isEmpty t then
+        required
+
+    else
+        Ok t
+
+
+optional : (String -> Result (Error e) (Maybe a)) -> String -> Result (Error e) (Maybe a)
+optional parse s =
+    let
+        t =
+            String.trim s
+    in
+    if String.isEmpty t then
+        Ok Nothing
+
+    else
+        parse t
 
 
 required : Result (Error e) a
