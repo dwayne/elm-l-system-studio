@@ -59,7 +59,7 @@ type alias Field a =
 type alias Model =
     { rules : Rules
     , axiom : Field String
-    , iterations : Iterations
+    , iterations : Field Int
     , startHeading : StartHeading
     , lineLength : LineLength
     , lineLengthScaleFactor : LineLengthScaleFactor
@@ -88,7 +88,7 @@ setSettings : Settings -> Model
 setSettings settings =
     { rules = Rules.init settings.rules
     , axiom = F.fromString F.nonEmptyString True settings.axiom
-    , iterations = Iterations.init settings.iterations
+    , iterations = F.fromValue F.nonNegativeInt True settings.iterations
     , startHeading = StartHeading.init settings.startHeading
     , lineLength = LineLength.init settings.lineLength
     , lineLengthScaleFactor = LineLengthScaleFactor.init settings.lineLengthScaleFactor
@@ -129,7 +129,7 @@ render model =
             )
                 |> Just
                 |> Maybe.apply (F.toMaybe model.axiom)
-                |> Maybe.apply (Field.toValue model.iterations)
+                |> Maybe.apply (F.toMaybe model.iterations)
                 |> Maybe.apply (Field.toValue model.startHeading)
                 |> Maybe.apply (Field.toValue model.lineLength)
                 |> Maybe.apply (Field.toValue model.lineLengthScaleFactor)
@@ -155,7 +155,7 @@ render model =
 isValid : Model -> Bool
 isValid model =
     [ F.isInvalid model.axiom
-    , Field.toValue model.iterations == Nothing
+    , F.isInvalid model.iterations
     , Field.toValue model.startHeading == Nothing
     , Field.toValue model.lineLength == Nothing
     , Field.toValue model.lineLengthScaleFactor == Nothing
@@ -234,7 +234,7 @@ type Msg
     = ChangedPreset Settings
     | ChangedRules Rules.Msg
     | InputAxiom String
-    | ChangedIterations Field.Msg
+    | InputIterations String
     | ChangedStartHeading Field.Msg
     | ChangedLineLength Field.Msg
     | ChangedLineLengthScaleFactor Field.Msg
@@ -281,8 +281,8 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedIterations subMsg ->
-            ( { model | iterations = Iterations.update subMsg }
+        InputIterations s ->
+            ( { model | iterations = F.fromString F.nonNegativeInt False s }
             , Cmd.none
             )
 
@@ -498,9 +498,15 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , field = axiom
                 , onInput = InputAxiom
                 }
-            , Iterations.view
-                { iterations = iterations
-                , onChange = ChangedIterations
+            , LabeledInput.view
+                { id = "iterations"
+                , label = "Iterations"
+                , tipe = Input.Int { min = Just 0, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = []
+                , field = iterations
+                , onInput = InputIterations
                 }
             , StartHeading.view
                 { startHeading = startHeading
