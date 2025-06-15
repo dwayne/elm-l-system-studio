@@ -19,8 +19,6 @@ import Lib.Input as Input
 import Lib.Maybe as Maybe
 import View.Canvas as Canvas
 import View.Field as Field
-import View.Fps as Fps exposing (Fps)
-import View.Ipf as Ipf exposing (Ipf)
 import View.LabeledInput as LabeledInput
 import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
@@ -57,8 +55,8 @@ type alias Model =
     , windowPositionX : Field Float
     , windowPositionY : Field Float
     , windowSize : Field Float
-    , fps : Fps
-    , ipf : Ipf
+    , fps : Field Int
+    , ipf : Field Int
     , settings : Settings
     , panIncrement : PanIncrement
     , zoomIncrement : ZoomIncrement
@@ -86,8 +84,8 @@ setSettings settings =
     , windowPositionX = F.fromValue F.float True settings.windowPosition.x
     , windowPositionY = F.fromValue F.float True settings.windowPosition.y
     , windowSize = F.fromValue F.nonNegativeFloat True settings.windowSize
-    , fps = Fps.init settings.fps
-    , ipf = Ipf.init settings.ipf
+    , fps = F.fromValue F.fps True settings.fps
+    , ipf = F.fromValue F.ipf True settings.ipf
     , settings = settings
     , panIncrement = PanIncrement.init 10
     , zoomIncrement = ZoomIncrement.init 10
@@ -127,8 +125,8 @@ render model =
                 |> Maybe.apply (F.toMaybe model.windowPositionX)
                 |> Maybe.apply (F.toMaybe model.windowPositionY)
                 |> Maybe.apply (F.toMaybe model.windowSize)
-                |> Maybe.apply (Field.toValue model.fps)
-                |> Maybe.apply (Field.toValue model.ipf)
+                |> Maybe.apply (F.toMaybe model.fps)
+                |> Maybe.apply (F.toMaybe model.ipf)
     in
     case maybeNewSettings of
         Just newSettings ->
@@ -153,8 +151,8 @@ isValid model =
     , F.isInvalid model.windowPositionX
     , F.isInvalid model.windowPositionY
     , F.isInvalid model.windowSize
-    , Field.toValue model.fps == Nothing
-    , Field.toValue model.ipf == Nothing
+    , F.isInvalid model.fps
+    , F.isInvalid model.ipf
     ]
         |> List.filter ((==) True)
         |> List.isEmpty
@@ -232,8 +230,8 @@ type Msg
     | InputWindowPositionX String
     | InputWindowPositionY String
     | InputWindowSize String
-    | ChangedFps Field.Msg
-    | ChangedIpf Field.Msg
+    | InputFps String
+    | InputIpf String
     | ChangedPanIncrement Field.Msg
     | ChangedZoomIncrement Field.Msg
     | ClickedRender
@@ -311,13 +309,13 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedFps subMsg ->
-            ( { model | fps = Fps.update subMsg }
+        InputFps s ->
+            ( { model | fps = F.fromString F.fps False s }
             , Cmd.none
             )
 
-        ChangedIpf subMsg ->
-            ( { model | ipf = Ipf.update subMsg }
+        InputIpf s ->
+            ( { model | ipf = F.fromString F.ipf False s }
             , Cmd.none
             )
 
@@ -568,13 +566,25 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , field = windowSize
                 , onInput = InputWindowSize
                 }
-            , Fps.view
-                { fps = fps
-                , onChange = ChangedFps
+            , LabeledInput.view
+                { id = "fps"
+                , label = "Frames per second (FPS)"
+                , tipe = Input.Int { min = Just 1, max = Just 60 }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "1" ]
+                , field = fps
+                , onInput = InputFps
                 }
-            , Ipf.view
-                { ipf = ipf
-                , onChange = ChangedIpf
+            , LabeledInput.view
+                { id = "ipf"
+                , label = "Instructions per frame (IPF)"
+                , tipe = Input.Int { min = Just 1, max = Just 60 }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "1" ]
+                , field = ipf
+                , onInput = InputIpf
                 }
             , H.p []
                 [ H.button
