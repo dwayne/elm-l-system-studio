@@ -1,9 +1,14 @@
 module Lib.Field exposing
-    ( Field
+    ( Error(..)
+    , Field
     , Type
     , boundedFloat
     , boundedInt
     , char
+    , customFloat
+    , customInt
+    , customString
+    , fail
     , float
     , fromString
     , fromValue
@@ -24,6 +29,7 @@ module Lib.Field exposing
     , positiveFloat
     , positiveInt
     , required
+    , setError
     , string
     , toMaybe
     , toResult
@@ -52,13 +58,8 @@ type Error e
     = Required
     | ParseError
     | ValidationError
+    | Failure String
     | Custom e
-
-
-
----
---- TODO: Flesh out ValidationError.
----
 
 
 type alias Type e a =
@@ -285,6 +286,11 @@ validationError =
     Err ValidationError
 
 
+fail : String -> Result (Error e) a
+fail =
+    Err << Failure
+
+
 fromString : Type e a -> Bool -> String -> Field e a
 fromString tipe isInitial s =
     Field
@@ -313,6 +319,11 @@ fromValue tipe isInitial value =
                 (tipe.toString value)
         , processed = tipe.validate value
         }
+
+
+setError : Error e -> Field e a -> Field e a
+setError error (Field state) =
+    Field { state | processed = Err error }
 
 
 isEmpty : Field e a -> Bool
@@ -401,6 +412,9 @@ mapError f (Field state) =
 
                         ValidationError ->
                             ValidationError
+
+                        Failure s ->
+                            Failure s
 
                         Custom e1 ->
                             Custom (f e1)
