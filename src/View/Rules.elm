@@ -4,15 +4,21 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.Keyed as HK
+import Lib.Field as F
+import Lib.Input as Input
 
 
 type Rules
     = Rules State
 
 
+type alias Field a =
+    F.Field () a
+
+
 type alias State =
     { ch : Char
-    , replacement : String
+    , replacement : Field String
     , id : Int
     , mapping : List ( Int, ( Char, String ) )
     }
@@ -25,7 +31,15 @@ init rawMapping =
             rawMapping
                 |> List.filterMap
                     (\( ch, replacement ) ->
-                        Maybe.map (Tuple.pair ch) (validateRule ch replacement)
+                        let
+                            trimmedReplacement =
+                                String.trim replacement
+                        in
+                        if isValidChar ch && trimmedReplacement /= "" then
+                            Just ( ch, trimmedReplacement )
+
+                        else
+                            Nothing
                     )
                 |> List.indexedMap Tuple.pair
 
@@ -34,7 +48,7 @@ init rawMapping =
     in
     Rules
         { ch = 'F'
-        , replacement = ""
+        , replacement = F.fromString F.nonEmptyString True ""
         , id = id
         , mapping = mapping
         }
@@ -67,18 +81,18 @@ update msg (Rules state) =
                 _ ->
                     Rules state
 
-        InputReplacement replacement ->
-            Rules { state | replacement = replacement }
+        InputReplacement s ->
+            Rules { state | replacement = F.fromString F.nonEmptyString False s }
 
         ClickedAddRule ->
-            case validateRule state.ch state.replacement of
-                Just trimmedReplacement ->
+            case toRule state.ch state.replacement of
+                Just rule ->
                     Rules
                         { state
                             | ch = 'F'
-                            , replacement = ""
+                            , replacement = F.fromString F.nonEmptyString True ""
                             , id = state.id + 1
-                            , mapping = state.mapping ++ [ ( state.id, ( state.ch, trimmedReplacement ) ) ]
+                            , mapping = state.mapping ++ [ ( state.id, rule ) ]
                         }
 
                 Nothing ->
@@ -92,17 +106,17 @@ update msg (Rules state) =
             Rules { state | mapping = mapping }
 
 
-validateRule : Char -> String -> Maybe String
-validateRule ch replacement =
-    let
-        trimmedReplacement =
-            String.trim replacement
-    in
-    if isValidChar ch && trimmedReplacement /= "" then
-        Just trimmedReplacement
+toRule : Char -> Field String -> Maybe ( Char, String )
+toRule ch =
+    F.toMaybe
+        >> Maybe.andThen
+            (\replacement ->
+                if isValidChar ch then
+                    Just ( ch, replacement )
 
-    else
-        Nothing
+                else
+                    Nothing
+            )
 
 
 isValidChar : Char -> Bool
@@ -130,7 +144,7 @@ view { rules, onChange } =
                     state
 
         isDisabled =
-            String.trim replacement == ""
+            not (isValidChar ch && F.isValid replacement)
     in
     H.map onChange <|
         H.div []
@@ -140,14 +154,17 @@ view { rules, onChange } =
             , H.p []
                 [ viewSelect ch
                 , H.text " "
-                , H.input
-                    [ HA.id "replacement"
-                    , HA.type_ "text"
-                    , HA.placeholder "F+F+F+F"
-                    , HA.value replacement
-                    , HE.onInput InputReplacement
-                    ]
-                    []
+                , Input.view
+                    { tipe = Input.string
+                    , isRequired = True
+                    , isDisabled = False
+                    , attrs =
+                        [ HA.id "replacement"
+                        , HA.placeholder "F+F+F+F"
+                        ]
+                    , field = replacement
+                    , onInput = InputReplacement
+                    }
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
