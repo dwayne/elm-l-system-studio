@@ -139,20 +139,19 @@ render model =
 
 isValid : Model -> Bool
 isValid model =
-    [ F.isInvalid model.axiom
-    , F.isInvalid model.iterations
-    , F.isInvalid model.startHeading
-    , F.isInvalid model.lineLength
-    , F.isInvalid model.lineLengthScaleFactor
-    , F.isInvalid model.turningAngle
-    , F.isInvalid model.windowPositionX
-    , F.isInvalid model.windowPositionY
-    , F.isInvalid model.windowSize
-    , F.isInvalid model.fps
-    , F.isInvalid model.ipf
-    ]
-        |> List.filter ((==) True)
-        |> List.isEmpty
+    List.all identity
+        [ F.isValid model.axiom
+        , F.isValid model.iterations
+        , F.isValid model.startHeading
+        , F.isValid model.lineLength
+        , F.isValid model.lineLengthScaleFactor
+        , F.isValid model.turningAngle
+        , F.isValid model.windowPositionX
+        , F.isValid model.windowPositionY
+        , F.isValid model.windowSize
+        , F.isValid model.fps
+        , F.isValid model.ipf
+        ]
 
 
 isValidZoomIncrement :
@@ -162,16 +161,16 @@ isValidZoomIncrement :
     }
     -> Bool
 isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
-    (\size inc ->
-        if isZoomingIn then
-            size >= 2 * inc
+    Maybe.map2
+        (\size inc ->
+            if isZoomingIn then
+                size >= 2 * inc
 
-        else
-            True
-    )
-        |> Just
-        |> Maybe.apply (F.toMaybe windowSize)
-        |> Maybe.apply (F.toMaybe zoomIncrement)
+            else
+                True
+        )
+        (F.toMaybe windowSize)
+        (F.toMaybe zoomIncrement)
         |> Maybe.withDefault False
 
 
@@ -330,61 +329,65 @@ update msg model =
             render model
 
         ClickedLeft ->
-            case ( F.toMaybe model.windowPositionX, F.toMaybe model.panIncrement ) of
-                ( Just windowPositionX, Just panIncrement ) ->
+            Maybe.map2
+                (\windowPositionX panIncrement ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX - panIncrement) }
-
-                _ ->
-                    ( model, Cmd.none )
+                )
+                (F.toMaybe model.windowPositionX)
+                (F.toMaybe model.panIncrement)
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedRight ->
-            case ( F.toMaybe model.windowPositionX, F.toMaybe model.panIncrement ) of
-                ( Just windowPositionX, Just panIncrement ) ->
+            Maybe.map2
+                (\windowPositionX panIncrement ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX + panIncrement) }
-
-                _ ->
-                    ( model, Cmd.none )
+                )
+                (F.toMaybe model.windowPositionX)
+                (F.toMaybe model.panIncrement)
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedUp ->
-            case ( F.toMaybe model.windowPositionY, F.toMaybe model.panIncrement ) of
-                ( Just windowPositionY, Just panIncrement ) ->
+            Maybe.map2
+                (\windowPositionY panIncrement ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY + panIncrement) }
-
-                _ ->
-                    ( model, Cmd.none )
+                )
+                (F.toMaybe model.windowPositionY)
+                (F.toMaybe model.panIncrement)
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedDown ->
-            case ( F.toMaybe model.windowPositionY, F.toMaybe model.panIncrement ) of
-                ( Just windowPositionY, Just panIncrement ) ->
+            Maybe.map2
+                (\windowPositionY panIncrement ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY - panIncrement) }
-
-                _ ->
-                    ( model, Cmd.none )
+                )
+                (F.toMaybe model.windowPositionY)
+                (F.toMaybe model.panIncrement)
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedIn ->
             let
                 maybeWindow =
-                    (\x y size inc ->
-                        let
-                            inc2 =
-                                2 * inc
-                        in
-                        if size >= inc2 then
-                            Just
-                                { x = x + inc
-                                , y = y + inc
-                                , size = size - inc2
-                                }
+                    Maybe.map4
+                        (\x y size inc ->
+                            let
+                                inc2 =
+                                    2 * inc
+                            in
+                            if size >= inc2 then
+                                Just
+                                    { x = x + inc
+                                    , y = y + inc
+                                    , size = size - inc2
+                                    }
 
-                        else
-                            Nothing
-                    )
-                        |> Just
-                        |> Maybe.apply (F.toMaybe model.windowPositionX)
-                        |> Maybe.apply (F.toMaybe model.windowPositionY)
-                        |> Maybe.apply (F.toMaybe model.windowSize)
-                        |> Maybe.apply (F.toMaybe model.zoomIncrement)
-                        |> Maybe.join
+                            else
+                                Nothing
+                        )
+                        (F.toMaybe model.windowPositionX)
+                        (F.toMaybe model.windowPositionY)
+                        (F.toMaybe model.windowSize)
+                        (F.toMaybe model.zoomIncrement)
+                        |> Maybe.withDefault Nothing
             in
             case maybeWindow of
                 Just { x, y, size } ->
@@ -401,21 +404,21 @@ update msg model =
         ClickedOut ->
             let
                 maybeWindow =
-                    (\x y size inc ->
-                        let
-                            inc2 =
-                                2 * inc
-                        in
-                        { x = x - inc
-                        , y = y - inc
-                        , size = size + inc2
-                        }
-                    )
-                        |> Just
-                        |> Maybe.apply (F.toMaybe model.windowPositionX)
-                        |> Maybe.apply (F.toMaybe model.windowPositionY)
-                        |> Maybe.apply (F.toMaybe model.windowSize)
-                        |> Maybe.apply (F.toMaybe model.zoomIncrement)
+                    Maybe.map4
+                        (\x y size inc ->
+                            let
+                                inc2 =
+                                    2 * inc
+                            in
+                            { x = x - inc
+                            , y = y - inc
+                            , size = size + inc2
+                            }
+                        )
+                        (F.toMaybe model.windowPositionX)
+                        (F.toMaybe model.windowPositionY)
+                        (F.toMaybe model.windowSize)
+                        (F.toMaybe model.zoomIncrement)
             in
             case maybeWindow of
                 Just { x, y, size } ->
@@ -476,7 +479,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "axiom"
                 , label = "Axiom"
-                , tipe = Input.String
+                , tipe = Input.string
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "F+F+F+F" ]
@@ -486,7 +489,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "iterations"
                 , label = "Iterations"
-                , tipe = Input.Int { min = Just 0, max = Nothing }
+                , tipe = Input.nonNegativeInt
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "3" ]
@@ -496,7 +499,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "start-heading"
                 , label = "Start Heading"
-                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , tipe = Input.float
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "0" ]
@@ -506,7 +509,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "line-length"
                 , label = "Line Length"
-                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , tipe = Input.nonNegativeFloat
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "1" ]
@@ -516,7 +519,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "line-length-scale-factor"
                 , label = "Line Length Scale Factor"
-                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , tipe = Input.nonNegativeFloat
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "1" ]
@@ -526,7 +529,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "turning-angle"
                 , label = "Turning Angle"
-                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , tipe = Input.float
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "90" ]
@@ -536,7 +539,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "window-position-x"
                 , label = "Window Position, x"
-                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , tipe = Input.float
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "-25" ]
@@ -546,7 +549,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "window-position-y"
                 , label = "Window Position, y"
-                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , tipe = Input.float
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "-25" ]
@@ -556,7 +559,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "window-size"
                 , label = "Window Size"
-                , tipe = Input.Float { min = Just 0, max = Nothing }
+                , tipe = Input.nonNegativeFloat
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "100" ]
@@ -576,7 +579,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
             , LabeledInput.view
                 { id = "ipf"
                 , label = "Instructions per frame (IPF)"
-                , tipe = Input.Int { min = Just 1, max = Just 60 }
+                , tipe = Input.Int { min = Just 1, max = Just 1000000 }
                 , isRequired = True
                 , isDisabled = False
                 , attrs = [ HA.placeholder "1" ]

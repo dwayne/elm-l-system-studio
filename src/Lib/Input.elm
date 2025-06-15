@@ -1,4 +1,13 @@
-module Lib.Input exposing (Type(..), ViewOptions, view)
+module Lib.Input exposing
+    ( Type(..)
+    , ViewOptions
+    , float
+    , int
+    , nonNegativeFloat
+    , nonNegativeInt
+    , string
+    , view
+    )
 
 import Html as H
 import Html.Attributes as HA
@@ -26,6 +35,31 @@ type Type
         { min : Maybe Float
         , max : Maybe Float
         }
+
+
+string : Type
+string =
+    String
+
+
+int : Type
+int =
+    Int { min = Nothing, max = Nothing }
+
+
+nonNegativeInt : Type
+nonNegativeInt =
+    Int { min = Just 0, max = Nothing }
+
+
+float : Type
+float =
+    Float { min = Nothing, max = Nothing }
+
+
+nonNegativeFloat : Type
+nonNegativeFloat =
+    Float { min = Just 0, max = Nothing }
 
 
 view : ViewOptions e a msg -> H.Html msg
