@@ -19,15 +19,12 @@ import Lib.Input as Input
 import Lib.Maybe as Maybe
 import View.Canvas as Canvas
 import View.Field as Field
-import View.FloatField as FloatField
 import View.Fps as Fps exposing (Fps)
 import View.Ipf as Ipf exposing (Ipf)
 import View.LabeledInput as LabeledInput
 import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
-import View.WindowPositionX as WindowPositionX exposing (WindowPositionX)
-import View.WindowPositionY as WindowPositionY exposing (WindowPositionY)
 import View.ZoomIncrement as ZoomIncrement exposing (ZoomIncrement)
 
 
@@ -57,8 +54,8 @@ type alias Model =
     , lineLength : Field Float
     , lineLengthScaleFactor : Field Float
     , turningAngle : Field Angle
-    , windowPositionX : WindowPositionX
-    , windowPositionY : WindowPositionY
+    , windowPositionX : Field Float
+    , windowPositionY : Field Float
     , windowSize : Field Float
     , fps : Fps
     , ipf : Ipf
@@ -86,8 +83,8 @@ setSettings settings =
     , lineLength = F.fromValue F.nonNegativeFloat True settings.lineLength
     , lineLengthScaleFactor = F.fromValue F.nonNegativeFloat True settings.lineLengthScaleFactor
     , turningAngle = F.fromValue F.angle True settings.turningAngle
-    , windowPositionX = WindowPositionX.init settings.windowPosition.x
-    , windowPositionY = WindowPositionX.init settings.windowPosition.y
+    , windowPositionX = F.fromValue F.float True settings.windowPosition.x
+    , windowPositionY = F.fromValue F.float True settings.windowPosition.y
     , windowSize = F.fromValue F.nonNegativeFloat True settings.windowSize
     , fps = Fps.init settings.fps
     , ipf = Ipf.init settings.ipf
@@ -127,8 +124,8 @@ render model =
                 |> Maybe.apply (F.toMaybe model.lineLength)
                 |> Maybe.apply (F.toMaybe model.lineLengthScaleFactor)
                 |> Maybe.apply (F.toMaybe model.turningAngle)
-                |> Maybe.apply (Field.toValue model.windowPositionX)
-                |> Maybe.apply (Field.toValue model.windowPositionY)
+                |> Maybe.apply (F.toMaybe model.windowPositionX)
+                |> Maybe.apply (F.toMaybe model.windowPositionY)
                 |> Maybe.apply (F.toMaybe model.windowSize)
                 |> Maybe.apply (Field.toValue model.fps)
                 |> Maybe.apply (Field.toValue model.ipf)
@@ -153,8 +150,8 @@ isValid model =
     , F.isInvalid model.lineLength
     , F.isInvalid model.lineLengthScaleFactor
     , F.isInvalid model.turningAngle
-    , Field.toValue model.windowPositionX == Nothing
-    , Field.toValue model.windowPositionY == Nothing
+    , F.isInvalid model.windowPositionX
+    , F.isInvalid model.windowPositionY
     , F.isInvalid model.windowSize
     , Field.toValue model.fps == Nothing
     , Field.toValue model.ipf == Nothing
@@ -232,8 +229,8 @@ type Msg
     | InputLineLength String
     | InputLineLengthScaleFactor String
     | InputTurningAngle String
-    | ChangedWindowPositionX Field.Msg
-    | ChangedWindowPositionY Field.Msg
+    | InputWindowPositionX String
+    | InputWindowPositionY String
     | InputWindowSize String
     | ChangedFps Field.Msg
     | ChangedIpf Field.Msg
@@ -299,13 +296,13 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedWindowPositionX subMsg ->
-            ( { model | windowPositionX = WindowPositionX.update subMsg }
+        InputWindowPositionX s ->
+            ( { model | windowPositionX = F.fromString F.float False s }
             , Cmd.none
             )
 
-        ChangedWindowPositionY subMsg ->
-            ( { model | windowPositionY = WindowPositionY.update subMsg }
+        InputWindowPositionY s ->
+            ( { model | windowPositionY = F.fromString F.float False s }
             , Cmd.none
             )
 
@@ -338,35 +335,35 @@ update msg model =
             render model
 
         ClickedLeft ->
-            case Field.toValue model.panIncrement of
-                Just panIncrement ->
-                    render { model | windowPositionX = FloatField.changeBy -panIncrement model.windowPositionX }
+            case ( F.toMaybe model.windowPositionX, Field.toValue model.panIncrement ) of
+                ( Just windowPositionX, Just panIncrement ) ->
+                    render { model | windowPositionX = F.fromValue F.float False (windowPositionX - panIncrement) }
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         ClickedRight ->
-            case Field.toValue model.panIncrement of
-                Just panIncrement ->
-                    render { model | windowPositionX = FloatField.changeBy panIncrement model.windowPositionX }
+            case ( F.toMaybe model.windowPositionX, Field.toValue model.panIncrement ) of
+                ( Just windowPositionX, Just panIncrement ) ->
+                    render { model | windowPositionX = F.fromValue F.float False (windowPositionX + panIncrement) }
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         ClickedUp ->
-            case Field.toValue model.panIncrement of
-                Just panIncrement ->
-                    render { model | windowPositionY = FloatField.changeBy panIncrement model.windowPositionY }
+            case ( F.toMaybe model.windowPositionY, Field.toValue model.panIncrement ) of
+                ( Just windowPositionY, Just panIncrement ) ->
+                    render { model | windowPositionY = F.fromValue F.float False (windowPositionY + panIncrement) }
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         ClickedDown ->
-            case Field.toValue model.panIncrement of
-                Just panIncrement ->
-                    render { model | windowPositionY = FloatField.changeBy -panIncrement model.windowPositionY }
+            case ( F.toMaybe model.windowPositionY, Field.toValue model.panIncrement ) of
+                ( Just windowPositionY, Just panIncrement ) ->
+                    render { model | windowPositionY = F.fromValue F.float False (windowPositionY - panIncrement) }
 
-                Nothing ->
+                _ ->
                     ( model, Cmd.none )
 
         ClickedIn ->
@@ -388,8 +385,8 @@ update msg model =
                             Nothing
                     )
                         |> Just
-                        |> Maybe.apply (Field.toValue model.windowPositionX)
-                        |> Maybe.apply (Field.toValue model.windowPositionY)
+                        |> Maybe.apply (F.toMaybe model.windowPositionX)
+                        |> Maybe.apply (F.toMaybe model.windowPositionY)
                         |> Maybe.apply (F.toMaybe model.windowSize)
                         |> Maybe.apply (Field.toValue model.zoomIncrement)
                         |> Maybe.join
@@ -398,8 +395,8 @@ update msg model =
                 Just { x, y, size } ->
                     render
                         { model
-                            | windowPositionX = FloatField.setValue x
-                            , windowPositionY = FloatField.setValue y
+                            | windowPositionX = F.fromValue F.float False x
+                            , windowPositionY = F.fromValue F.float False y
                             , windowSize = F.fromValue F.nonNegativeFloat False size
                         }
 
@@ -420,8 +417,8 @@ update msg model =
                         }
                     )
                         |> Just
-                        |> Maybe.apply (Field.toValue model.windowPositionX)
-                        |> Maybe.apply (Field.toValue model.windowPositionY)
+                        |> Maybe.apply (F.toMaybe model.windowPositionX)
+                        |> Maybe.apply (F.toMaybe model.windowPositionY)
                         |> Maybe.apply (F.toMaybe model.windowSize)
                         |> Maybe.apply (Field.toValue model.zoomIncrement)
             in
@@ -429,8 +426,8 @@ update msg model =
                 Just { x, y, size } ->
                     render
                         { model
-                            | windowPositionX = FloatField.setValue x
-                            , windowPositionY = FloatField.setValue y
+                            | windowPositionX = F.fromValue F.float False x
+                            , windowPositionY = F.fromValue F.float False y
                             , windowSize = F.fromValue F.nonNegativeFloat False size
                         }
 
@@ -541,13 +538,25 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , field = turningAngle
                 , onInput = InputTurningAngle
                 }
-            , WindowPositionX.view
-                { windowPositionX = windowPositionX
-                , onChange = ChangedWindowPositionX
+            , LabeledInput.view
+                { id = "window-position-x"
+                , label = "Window Position, x"
+                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "-25" ]
+                , field = windowPositionX
+                , onInput = InputWindowPositionX
                 }
-            , WindowPositionY.view
-                { windowPositionY = windowPositionY
-                , onChange = ChangedWindowPositionY
+            , LabeledInput.view
+                { id = "window-position-y"
+                , label = "Window Position, y"
+                , tipe = Input.Float { min = Nothing, max = Nothing }
+                , isRequired = True
+                , isDisabled = False
+                , attrs = [ HA.placeholder "-25" ]
+                , field = windowPositionY
+                , onInput = InputWindowPositionY
                 }
             , LabeledInput.view
                 { id = "window-size"
