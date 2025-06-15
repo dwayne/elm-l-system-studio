@@ -17,7 +17,7 @@ type alias Field a =
 
 
 type alias State =
-    { ch : Char
+    { ch : Field Char
     , replacement : Field String
     , id : Int
     , mapping : List ( Int, ( Char, String ) )
@@ -47,76 +47,11 @@ init rawMapping =
             List.length mapping
     in
     Rules
-        { ch = 'F'
+        { ch = F.fromValue (F.char isValidChar) True 'F'
         , replacement = F.fromString F.nonEmptyString True ""
         , id = id
         , mapping = mapping
         }
-
-
-toValue : Rules -> List ( Char, String )
-toValue (Rules { mapping }) =
-    List.map Tuple.second mapping
-
-
-type Msg
-    = SelectedCh String
-    | InputReplacement String
-    | ClickedAddRule
-    | ClickedRemoveRule Int
-
-
-update : Msg -> Rules -> Rules
-update msg (Rules state) =
-    case msg of
-        SelectedCh chAsString ->
-            case String.uncons chAsString of
-                Just ( ch, "" ) ->
-                    if isValidChar ch then
-                        Rules { state | ch = ch }
-
-                    else
-                        Rules state
-
-                _ ->
-                    Rules state
-
-        InputReplacement s ->
-            Rules { state | replacement = F.fromString F.nonEmptyString False s }
-
-        ClickedAddRule ->
-            case toRule state.ch state.replacement of
-                Just rule ->
-                    Rules
-                        { state
-                            | ch = 'F'
-                            , replacement = F.fromString F.nonEmptyString True ""
-                            , id = state.id + 1
-                            , mapping = state.mapping ++ [ ( state.id, rule ) ]
-                        }
-
-                Nothing ->
-                    Rules state
-
-        ClickedRemoveRule id ->
-            let
-                mapping =
-                    List.filter (Tuple.first >> (/=) id) state.mapping
-            in
-            Rules { state | mapping = mapping }
-
-
-toRule : Char -> Field String -> Maybe ( Char, String )
-toRule ch =
-    F.toMaybe
-        >> Maybe.andThen
-            (\replacement ->
-                if isValidChar ch then
-                    Just ( ch, replacement )
-
-                else
-                    Nothing
-            )
 
 
 isValidChar : Char -> Bool
@@ -127,6 +62,54 @@ isValidChar ch =
 chars : String
 chars =
     "Ff+-|[]#!@{}><&()ABCDEGHIJKLMNOPQRSTUVWXYZabcdeghijklmnopqrstuvwxyz"
+
+
+toValue : Rules -> List ( Char, String )
+toValue (Rules { mapping }) =
+    List.map Tuple.second mapping
+
+
+
+-- UPDATE
+
+
+type Msg
+    = InputCh String
+    | InputReplacement String
+    | ClickedAddRule
+    | ClickedRemoveRule Int
+
+
+update : Msg -> Rules -> Rules
+update msg ((Rules state) as rules) =
+    case msg of
+        InputCh s ->
+            Rules { state | ch = F.fromString (F.char isValidChar) False s }
+
+        InputReplacement s ->
+            Rules { state | replacement = F.fromString F.nonEmptyString False s }
+
+        ClickedAddRule ->
+            Maybe.map2
+                (\ch replacement ->
+                    Rules
+                        { state
+                            | ch = F.fromValue (F.char isValidChar) True 'F'
+                            , replacement = F.fromString F.nonEmptyString True ""
+                            , id = state.id + 1
+                            , mapping = state.mapping ++ [ ( state.id, ( ch, replacement ) ) ]
+                        }
+                )
+                (F.toMaybe state.ch)
+                (F.toMaybe state.replacement)
+                |> Maybe.withDefault rules
+
+        ClickedRemoveRule id ->
+            Rules { state | mapping = List.filter (Tuple.first >> (/=) id) state.mapping }
+
+
+
+-- VIEW
 
 
 type alias ViewOptions msg =
@@ -144,7 +127,7 @@ view { rules, onChange } =
                     state
 
         isDisabled =
-            not (isValidChar ch && F.isValid replacement)
+            F.isInvalid ch || F.isInvalid replacement
     in
     H.map onChange <|
         H.div []
@@ -180,15 +163,21 @@ view { rules, onChange } =
             ]
 
 
-viewSelect : Char -> H.Html Msg
-viewSelect selected =
+viewSelect : Field Char -> H.Html Msg
+viewSelect selectedAsField =
+    let
+        selected =
+            selectedAsField
+                |> F.toMaybe
+                |> Maybe.withDefault 'F'
+    in
     chars
         |> String.toList
         |> List.map
             (\ch ->
                 viewOption { ch = ch, selected = selected }
             )
-        |> H.select [ HE.onInput SelectedCh ]
+        |> H.select [ HE.onInput InputCh ]
 
 
 viewOption : { ch : Char, selected : Char } -> H.Html msg

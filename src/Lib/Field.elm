@@ -3,6 +3,7 @@ module Lib.Field exposing
     , Type
     , boundedFloat
     , boundedInt
+    , char
     , float
     , fromString
     , fromValue
@@ -213,6 +214,32 @@ customString : (String -> Result (Error e) String) -> Type e String
 customString validate =
     { toString = identity
     , toValue = validate
+    , validate = validate
+    }
+
+
+char : (Char -> Bool) -> Type e Char
+char isGood =
+    let
+        validate ch =
+            if isGood ch then
+                Ok ch
+
+            else
+                validationError
+    in
+    { toString = String.fromChar
+    , toValue =
+        \s ->
+            case String.uncons s of
+                Just ( ch, "" ) ->
+                    validate ch
+
+                Just _ ->
+                    validationError
+
+                Nothing ->
+                    required
     , validate = validate
     }
 
