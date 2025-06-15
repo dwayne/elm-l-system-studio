@@ -18,12 +18,9 @@ import Lib.Field as F
 import Lib.Input as Input
 import Lib.Maybe as Maybe
 import View.Canvas as Canvas
-import View.Field as Field
 import View.LabeledInput as LabeledInput
-import View.PanIncrement as PanIncrement exposing (PanIncrement)
 import View.Preset as Preset
 import View.Rules as Rules exposing (Rules)
-import View.ZoomIncrement as ZoomIncrement exposing (ZoomIncrement)
 
 
 main : Program () Model Msg
@@ -57,9 +54,9 @@ type alias Model =
     , windowSize : Field Float
     , fps : Field Int
     , ipf : Field Int
+    , panIncrement : Field Float
+    , zoomIncrement : Field Float
     , settings : Settings
-    , panIncrement : PanIncrement
-    , zoomIncrement : ZoomIncrement
     , renderer : Renderer Instruction
     }
 
@@ -86,9 +83,9 @@ setSettings settings =
     , windowSize = F.fromValue F.nonNegativeFloat True settings.windowSize
     , fps = F.fromValue F.fps True settings.fps
     , ipf = F.fromValue F.ipf True settings.ipf
+    , panIncrement = F.fromValue F.panIncrement True 10
+    , zoomIncrement = F.fromValue F.zoomIncrement True 10
     , settings = settings
-    , panIncrement = PanIncrement.init 10
-    , zoomIncrement = ZoomIncrement.init 10
     , renderer = initRenderer settings
     }
 
@@ -158,13 +155,13 @@ isValid model =
         |> List.isEmpty
 
 
-isValidPanIncrement : Model -> Bool
-isValidPanIncrement { panIncrement } =
-    Field.toValue panIncrement /= Nothing
-
-
-isValidZoomIncrement : Bool -> Model -> Bool
-isValidZoomIncrement isZoomingIn { windowSize, zoomIncrement } =
+isValidZoomIncrement :
+    { isZoomingIn : Bool
+    , windowSize : Field Float
+    , zoomIncrement : Field Float
+    }
+    -> Bool
+isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
     (\size inc ->
         if isZoomingIn then
             size >= 2 * inc
@@ -174,7 +171,7 @@ isValidZoomIncrement isZoomingIn { windowSize, zoomIncrement } =
     )
         |> Just
         |> Maybe.apply (F.toMaybe windowSize)
-        |> Maybe.apply (Field.toValue zoomIncrement)
+        |> Maybe.apply (F.toMaybe zoomIncrement)
         |> Maybe.withDefault False
 
 
@@ -232,8 +229,8 @@ type Msg
     | InputWindowSize String
     | InputFps String
     | InputIpf String
-    | ChangedPanIncrement Field.Msg
-    | ChangedZoomIncrement Field.Msg
+    | InputPanIncrement String
+    | InputZoomIncrement String
     | ClickedRender
     | ClickedLeft
     | ClickedRight
@@ -319,13 +316,13 @@ update msg model =
             , Cmd.none
             )
 
-        ChangedPanIncrement subMsg ->
-            ( { model | panIncrement = PanIncrement.update subMsg }
+        InputPanIncrement s ->
+            ( { model | panIncrement = F.fromString F.panIncrement False s }
             , Cmd.none
             )
 
-        ChangedZoomIncrement subMsg ->
-            ( { model | zoomIncrement = ZoomIncrement.update subMsg }
+        InputZoomIncrement s ->
+            ( { model | zoomIncrement = F.fromString F.zoomIncrement False s }
             , Cmd.none
             )
 
@@ -333,7 +330,7 @@ update msg model =
             render model
 
         ClickedLeft ->
-            case ( F.toMaybe model.windowPositionX, Field.toValue model.panIncrement ) of
+            case ( F.toMaybe model.windowPositionX, F.toMaybe model.panIncrement ) of
                 ( Just windowPositionX, Just panIncrement ) ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX - panIncrement) }
 
@@ -341,7 +338,7 @@ update msg model =
                     ( model, Cmd.none )
 
         ClickedRight ->
-            case ( F.toMaybe model.windowPositionX, Field.toValue model.panIncrement ) of
+            case ( F.toMaybe model.windowPositionX, F.toMaybe model.panIncrement ) of
                 ( Just windowPositionX, Just panIncrement ) ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX + panIncrement) }
 
@@ -349,7 +346,7 @@ update msg model =
                     ( model, Cmd.none )
 
         ClickedUp ->
-            case ( F.toMaybe model.windowPositionY, Field.toValue model.panIncrement ) of
+            case ( F.toMaybe model.windowPositionY, F.toMaybe model.panIncrement ) of
                 ( Just windowPositionY, Just panIncrement ) ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY + panIncrement) }
 
@@ -357,7 +354,7 @@ update msg model =
                     ( model, Cmd.none )
 
         ClickedDown ->
-            case ( F.toMaybe model.windowPositionY, Field.toValue model.panIncrement ) of
+            case ( F.toMaybe model.windowPositionY, F.toMaybe model.panIncrement ) of
                 ( Just windowPositionY, Just panIncrement ) ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY - panIncrement) }
 
@@ -386,7 +383,7 @@ update msg model =
                         |> Maybe.apply (F.toMaybe model.windowPositionX)
                         |> Maybe.apply (F.toMaybe model.windowPositionY)
                         |> Maybe.apply (F.toMaybe model.windowSize)
-                        |> Maybe.apply (Field.toValue model.zoomIncrement)
+                        |> Maybe.apply (F.toMaybe model.zoomIncrement)
                         |> Maybe.join
             in
             case maybeWindow of
@@ -418,7 +415,7 @@ update msg model =
                         |> Maybe.apply (F.toMaybe model.windowPositionX)
                         |> Maybe.apply (F.toMaybe model.windowPositionY)
                         |> Maybe.apply (F.toMaybe model.windowSize)
-                        |> Maybe.apply (Field.toValue model.zoomIncrement)
+                        |> Maybe.apply (F.toMaybe model.zoomIncrement)
             in
             case maybeWindow of
                 Just { x, y, size } ->
@@ -604,14 +601,20 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , height = canvasSize
                 }
             , H.p []
-                [ PanIncrement.view
-                    { panIncrement = panIncrement
-                    , onChange = ChangedPanIncrement
+                [ LabeledInput.view
+                    { id = "pan-increment"
+                    , label = "Pan Increment"
+                    , tipe = Input.Int { min = Just 1, max = Just 1000000 }
+                    , isRequired = True
+                    , isDisabled = False
+                    , attrs = [ HA.placeholder "1" ]
+                    , field = panIncrement
+                    , onInput = InputPanIncrement
                     }
                 , H.text "Pan: "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement model then
+                    , if F.isValid panIncrement then
                         HE.onClick ClickedLeft
 
                       else
@@ -621,7 +624,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement model then
+                    , if F.isValid panIncrement then
                         HE.onClick ClickedRight
 
                       else
@@ -631,7 +634,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement model then
+                    , if F.isValid panIncrement then
                         HE.onClick ClickedUp
 
                       else
@@ -641,7 +644,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidPanIncrement model then
+                    , if F.isValid panIncrement then
                         HE.onClick ClickedDown
 
                       else
@@ -649,15 +652,21 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                     ]
                     [ H.text "Down" ]
                 ]
-            , H.p []
-                [ ZoomIncrement.view
-                    { zoomIncrement = zoomIncrement
-                    , onChange = ChangedZoomIncrement
+            , H.p [] <|
+                [ LabeledInput.view
+                    { id = "zoom-increment"
+                    , label = "Zoom Increment"
+                    , tipe = Input.Int { min = Just 1, max = Just 1000 }
+                    , isRequired = True
+                    , isDisabled = False
+                    , attrs = [ HA.placeholder "1" ]
+                    , field = zoomIncrement
+                    , onInput = InputZoomIncrement
                     }
                 , H.text "Zoom: "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidZoomIncrement True model then
+                    , if isValidZoomIncrement { isZoomingIn = True, windowSize = windowSize, zoomIncrement = zoomIncrement } then
                         HE.onClick ClickedIn
 
                       else
@@ -667,7 +676,7 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
                 , H.text " "
                 , H.button
                     [ HA.type_ "button"
-                    , if isValidZoomIncrement False model then
+                    , if isValidZoomIncrement { isZoomingIn = False, windowSize = windowSize, zoomIncrement = zoomIncrement } then
                         HE.onClick ClickedOut
 
                       else

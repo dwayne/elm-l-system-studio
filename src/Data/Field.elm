@@ -1,4 +1,4 @@
-module Data.Field exposing (angle, fps, ipf)
+module Data.Field exposing (angle, fps, ipf, panIncrement, zoomIncrement)
 
 import Data.Angle as Angle exposing (Angle)
 import Lib.Field as Field
@@ -20,3 +20,13 @@ fps =
 ipf : Field.Type e Int
 ipf =
     Field.boundedInt { min = 1, max = 1000000 }
+
+
+panIncrement : Field.Type e Float
+panIncrement =
+    Field.boundedFloat { min = 1, max = 1000000 }
+
+
+zoomIncrement : Field.Type e Float
+zoomIncrement =
+    Field.boundedFloat { min = 1, max = 1000 }
