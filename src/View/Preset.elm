@@ -8,27 +8,68 @@ import Html.Events as HE
 import Json.Decode as JD
 
 
+type alias Preset =
+    { id : String
+    , label : String
+    , settings : Settings
+    }
 
--- CONSTANTS
 
-
-presets : Dict String Settings
+presets : List Preset
 presets =
-    Dict.fromList
-        [ ( "kochCurve", Settings.kochCurve )
-        , ( "tiles", Settings.tiles )
-        , ( "tree", Settings.tree )
-        , ( "leaf", Settings.leaf )
-        , ( "bush1", Settings.bush1 )
-        , ( "bush2", Settings.bush2 )
-        , ( "bush3", Settings.bush3 )
-        , ( "bush4", Settings.bush4 )
-        , ( "bush5", Settings.bush5 )
-        , ( "crystal", Settings.crystal )
-        , ( "peanoCurve", Settings.peanoCurve )
-        , ( "quadraticSnowflake", Settings.quadraticSnowflake )
-        , ( "vonKochSnowflake", Settings.vonKochSnowflake )
-        ]
+    [ { id = "kochCurve"
+      , label = "Koch Curve"
+      , settings = Settings.kochCurve
+      }
+    , { id = "tiles"
+      , label = "Tiles"
+      , settings = Settings.tiles
+      }
+    , { id = "tree"
+      , label = "Tree"
+      , settings = Settings.tree
+      }
+    , { id = "leaf"
+      , label = "Leaf"
+      , settings = Settings.leaf
+      }
+    , { id = "bush1"
+      , label = "Bush 1"
+      , settings = Settings.bush1
+      }
+    , { id = "bush2"
+      , label = "Bush 2"
+      , settings = Settings.bush2
+      }
+    , { id = "bush3"
+      , label = "Bush 3"
+      , settings = Settings.bush3
+      }
+    , { id = "bush4"
+      , label = "Bush 4"
+      , settings = Settings.bush4
+      }
+    , { id = "bush5"
+      , label = "Bush 5"
+      , settings = Settings.bush5
+      }
+    , { id = "crystal"
+      , label = "Crrystal"
+      , settings = Settings.crystal
+      }
+    , { id = "peanoCurve"
+      , label = "Peano Curve"
+      , settings = Settings.peanoCurve
+      }
+    , { id = "quadraticSnowflake"
+      , label = "Quadratic Snowflake"
+      , settings = Settings.quadraticSnowflake
+      }
+    , { id = "vonKochSnowflake"
+      , label = "von Koch Snowflake"
+      , settings = Settings.vonKochSnowflake
+      }
+    ]
 
 
 
@@ -49,20 +90,12 @@ view { onSettings } =
             [ HA.id "preset"
             , onInput onSettings
             ]
-            [ H.option [ HA.value "kochCurve" ] [ H.text "Koch Curve" ]
-            , H.option [ HA.value "tiles" ] [ H.text "Tiles" ]
-            , H.option [ HA.value "tree" ] [ H.text "Tree" ]
-            , H.option [ HA.value "leaf" ] [ H.text "Leaf" ]
-            , H.option [ HA.value "bush1" ] [ H.text "Bush 1" ]
-            , H.option [ HA.value "bush2" ] [ H.text "Bush 2" ]
-            , H.option [ HA.value "bush3" ] [ H.text "Bush 3" ]
-            , H.option [ HA.value "bush4" ] [ H.text "Bush 4" ]
-            , H.option [ HA.value "bush5" ] [ H.text "Bush 5" ]
-            , H.option [ HA.value "crystal" ] [ H.text "Crystal" ]
-            , H.option [ HA.value "peanoCurve" ] [ H.text "Peano Curve" ]
-            , H.option [ HA.value "quadraticSnowflake" ] [ H.text "Quadratic Snowflake" ]
-            , H.option [ HA.value "vonKochSnowflake" ] [ H.text "von Koch Snowflake" ]
-            ]
+            (List.map
+                (\{ id, label } ->
+                    H.option [ HA.value id ] [ H.text label ]
+                )
+                presets
+            )
         ]
 
 
@@ -77,8 +110,8 @@ onInput toMsg =
             HE.targetValue
                 |> JD.andThen
                     (\s ->
-                        case Dict.get s presets of
-                            Just settings ->
+                        case Dict.get s presetsAsDict of
+                            Just { settings } ->
                                 JD.succeed ( toMsg settings, True )
 
                             Nothing ->
@@ -86,3 +119,10 @@ onInput toMsg =
                     )
     in
     HE.stopPropagationOn "input" decoder
+
+
+presetsAsDict : Dict String Preset
+presetsAsDict =
+    presets
+        |> List.map (\preset -> ( preset.id, preset ))
+        |> Dict.fromList
