@@ -6,6 +6,7 @@ import Data.Dictionary as Dictionary
 import Data.Field as F
 import Data.Generator as Generator
 import Data.Position exposing (Position)
+import Data.Preset as Preset exposing (Preset)
 import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings exposing (Settings)
 import Data.Transformer as Transformer exposing (Instruction)
@@ -42,7 +43,8 @@ type alias Field a =
 
 
 type alias Model =
-    { rules : Rules
+    { preset : Field Preset
+    , rules : Rules
     , axiom : Field String
     , iterations : Field Int
     , startHeading : Field Angle
@@ -64,14 +66,19 @@ type alias Model =
 init : () -> ( Model, Cmd msg )
 init =
     always
-        ( setSettings Settings.kochCurve
+        ( initFromPreset True Preset.default
         , clear ()
         )
 
 
-setSettings : Settings -> Model
-setSettings settings =
-    { rules = Rules.init settings.rules
+initFromPreset : Bool -> Preset -> Model
+initFromPreset isInitial preset =
+    let
+        { settings } =
+            preset
+    in
+    { preset = F.fromValue F.preset isInitial preset
+    , rules = Rules.init settings.rules
     , axiom = F.fromString F.nonEmptyString True settings.axiom
     , iterations = F.fromValue F.nonNegativeInt True settings.iterations
     , startHeading = F.fromValue F.angle True settings.startHeading
@@ -215,7 +222,7 @@ initRenderer settings =
 
 
 type Msg
-    = ChangedPreset Settings
+    = InputPreset Preset
     | ChangedRules Rules.Msg
     | InputAxiom String
     | InputIterations String
@@ -243,15 +250,21 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        ChangedPreset settings ->
-            ( setSettings
-                { settings
-                  --
-                  -- N.B. Don't change FPS and IPF when the preset is changed.
-                  --
-                    | fps = model.settings.fps
-                    , ipf = model.settings.ipf
-                }
+        InputPreset ({ settings } as preset) ->
+            let
+                adjustedSettings =
+                    { settings
+                      --
+                      -- N.B. Don't change FPS and IPF when the preset is changed.
+                      --
+                        | fps = model.settings.fps
+                        , ipf = model.settings.ipf
+                    }
+
+                adjustedPreset =
+                    { preset | settings = adjustedSettings }
+            in
+            ( initFromPreset False adjustedPreset
             , clear ()
             )
 
@@ -458,7 +471,7 @@ subscriptions model =
 
 
 view : Model -> H.Html Msg
-view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, panIncrement, zoomIncrement, renderer } as model) =
+view ({ preset, rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFactor, turningAngle, windowPositionX, windowPositionY, windowSize, fps, ipf, settings, panIncrement, zoomIncrement, renderer } as model) =
     let
         canvasSize =
             settings.canvasSize
@@ -470,7 +483,8 @@ view ({ rules, axiom, iterations, startHeading, lineLength, lineLengthScaleFacto
         [ H.h1 [] [ H.text "L-System Studio" ]
         , viewLayout
             [ Preset.view
-                { onSettings = ChangedPreset
+                { preset = preset
+                , onPreset = InputPreset
                 }
             , Rules.view
                 { rules = rules
