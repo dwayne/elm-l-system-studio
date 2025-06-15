@@ -103,7 +103,7 @@ render model =
         oldSettings =
             model.settings
 
-        maybeNewSettings =
+        resultNewSettings =
             (\axiom iterations startHeading lineLength lineLengthScaleFactor turningAngle windowPositionX windowPositionY windowSize fps ipf ->
                 { oldSettings
                     | rules = Rules.toValue model.rules
@@ -119,26 +119,25 @@ render model =
                     , ipf = ipf
                 }
             )
-                |> Just
-                |> Maybe.apply (F.toMaybe model.axiom)
-                |> Maybe.apply (F.toMaybe model.iterations)
-                |> Maybe.apply (F.toMaybe model.startHeading)
-                |> Maybe.apply (F.toMaybe model.lineLength)
-                |> Maybe.apply (F.toMaybe model.lineLengthScaleFactor)
-                |> Maybe.apply (F.toMaybe model.turningAngle)
-                |> Maybe.apply (F.toMaybe model.windowPositionX)
-                |> Maybe.apply (F.toMaybe model.windowPositionY)
-                |> Maybe.apply (F.toMaybe model.windowSize)
-                |> Maybe.apply (F.toMaybe model.fps)
-                |> Maybe.apply (F.toMaybe model.ipf)
+                |> F.get model.axiom
+                |> F.and model.iterations
+                |> F.and model.startHeading
+                |> F.and model.lineLength
+                |> F.and model.lineLengthScaleFactor
+                |> F.and model.turningAngle
+                |> F.and model.windowPositionX
+                |> F.and model.windowPositionY
+                |> F.and model.windowSize
+                |> F.and model.fps
+                |> F.and model.ipf
     in
-    case maybeNewSettings of
-        Just newSettings ->
+    case resultNewSettings of
+        Ok newSettings ->
             ( { model | settings = newSettings, renderer = initRenderer newSettings }
             , clear ()
             )
 
-        Nothing ->
+        Err _ ->
             ( model
             , Cmd.none
             )
@@ -168,7 +167,7 @@ isValidZoomIncrement :
     }
     -> Bool
 isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
-    Maybe.map2
+    F.apply2
         (\size inc ->
             if isZoomingIn then
                 size >= 2 * inc
@@ -176,9 +175,9 @@ isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
             else
                 True
         )
-        (F.toMaybe windowSize)
-        (F.toMaybe zoomIncrement)
-        |> Maybe.withDefault False
+        windowSize
+        zoomIncrement
+        |> Result.withDefault False
 
 
 initRenderer : Settings -> Renderer Instruction
@@ -342,45 +341,45 @@ update msg model =
             render model
 
         ClickedLeft ->
-            Maybe.map2
+            F.apply2
                 (\windowPositionX panIncrement ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX - panIncrement) }
                 )
-                (F.toMaybe model.windowPositionX)
-                (F.toMaybe model.panIncrement)
-                |> Maybe.withDefault ( model, Cmd.none )
+                model.windowPositionX
+                model.panIncrement
+                |> Result.withDefault ( model, Cmd.none )
 
         ClickedRight ->
-            Maybe.map2
+            F.apply2
                 (\windowPositionX panIncrement ->
                     render { model | windowPositionX = F.fromValue F.float False (windowPositionX + panIncrement) }
                 )
-                (F.toMaybe model.windowPositionX)
-                (F.toMaybe model.panIncrement)
-                |> Maybe.withDefault ( model, Cmd.none )
+                model.windowPositionX
+                model.panIncrement
+                |> Result.withDefault ( model, Cmd.none )
 
         ClickedUp ->
-            Maybe.map2
+            F.apply2
                 (\windowPositionY panIncrement ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY + panIncrement) }
                 )
-                (F.toMaybe model.windowPositionY)
-                (F.toMaybe model.panIncrement)
-                |> Maybe.withDefault ( model, Cmd.none )
+                model.windowPositionY
+                model.panIncrement
+                |> Result.withDefault ( model, Cmd.none )
 
         ClickedDown ->
-            Maybe.map2
+            F.apply2
                 (\windowPositionY panIncrement ->
                     render { model | windowPositionY = F.fromValue F.float False (windowPositionY - panIncrement) }
                 )
-                (F.toMaybe model.windowPositionY)
-                (F.toMaybe model.panIncrement)
-                |> Maybe.withDefault ( model, Cmd.none )
+                model.windowPositionY
+                model.panIncrement
+                |> Result.withDefault ( model, Cmd.none )
 
         ClickedIn ->
             let
                 maybeWindow =
-                    Maybe.map4
+                    F.apply4
                         (\x y size inc ->
                             let
                                 inc2 =
@@ -396,11 +395,11 @@ update msg model =
                             else
                                 Nothing
                         )
-                        (F.toMaybe model.windowPositionX)
-                        (F.toMaybe model.windowPositionY)
-                        (F.toMaybe model.windowSize)
-                        (F.toMaybe model.zoomIncrement)
-                        |> Maybe.withDefault Nothing
+                        model.windowPositionX
+                        model.windowPositionY
+                        model.windowSize
+                        model.zoomIncrement
+                        |> Result.withDefault Nothing
             in
             case maybeWindow of
                 Just { x, y, size } ->
@@ -416,8 +415,8 @@ update msg model =
 
         ClickedOut ->
             let
-                maybeWindow =
-                    Maybe.map4
+                resultWindow =
+                    F.apply4
                         (\x y size inc ->
                             let
                                 inc2 =
@@ -428,13 +427,13 @@ update msg model =
                             , size = size + inc2
                             }
                         )
-                        (F.toMaybe model.windowPositionX)
-                        (F.toMaybe model.windowPositionY)
-                        (F.toMaybe model.windowSize)
-                        (F.toMaybe model.zoomIncrement)
+                        model.windowPositionX
+                        model.windowPositionY
+                        model.windowSize
+                        model.zoomIncrement
             in
-            case maybeWindow of
-                Just { x, y, size } ->
+            case resultWindow of
+                Ok { x, y, size } ->
                     render
                         { model
                             | windowPositionX = F.fromValue F.float False x
@@ -442,7 +441,7 @@ update msg model =
                             , windowSize = F.fromValue F.nonNegativeFloat False size
                         }
 
-                Nothing ->
+                Err _ ->
                     ( model, Cmd.none )
 
         ChangedRenderer subMsg ->

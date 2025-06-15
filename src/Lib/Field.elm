@@ -2,6 +2,11 @@ module Lib.Field exposing
     ( Error(..)
     , Field
     , Type
+    , and
+    , apply2
+    , apply3
+    , apply4
+    , apply5
     , boundedFloat
     , boundedInt
     , char
@@ -12,6 +17,7 @@ module Lib.Field exposing
     , float
     , fromString
     , fromValue
+    , get
     , int
     , isClean
     , isDirty
@@ -421,3 +427,47 @@ mapError f (Field state) =
                 )
                 state.processed
         }
+
+
+
+--
+-- The following are useful for mimicking an applicative style.
+--
+
+
+apply2 : (a -> b -> value) -> Field x a -> Field x b -> Result (Error x) value
+apply2 f field1 field2 =
+    Result.map2 f (toResult field1) (toResult field2)
+
+
+apply3 : (a -> b -> c -> value) -> Field x a -> Field x b -> Field x c -> Result (Error x) value
+apply3 f field1 field2 field3 =
+    Result.map3 f (toResult field1) (toResult field2) (toResult field3)
+
+
+apply4 : (a -> b -> c -> d -> value) -> Field x a -> Field x b -> Field x c -> Field x d -> Result (Error x) value
+apply4 f field1 field2 field3 field4 =
+    Result.map4 f (toResult field1) (toResult field2) (toResult field3) (toResult field4)
+
+
+apply5 : (a -> b -> c -> d -> e -> value) -> Field x a -> Field x b -> Field x c -> Field x d -> Field x e -> Result (Error x) value
+apply5 f field1 field2 field3 field4 field5 =
+    Result.map5 f (toResult field1) (toResult field2) (toResult field3) (toResult field4) (toResult field5)
+
+
+get : Field e a -> (a -> b) -> Result (Error e) b
+get field f =
+    Result.map f (toResult field)
+
+
+and : Field e a -> Result (Error e) (a -> b) -> Result (Error e) b
+and field rf =
+    case ( toResult field, rf ) of
+        ( Ok a, Ok f ) ->
+            Ok (f a)
+
+        ( Err e1, _ ) ->
+            Err e1
+
+        ( _, Err e2 ) ->
+            Err e2
