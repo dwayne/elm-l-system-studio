@@ -2,21 +2,6 @@ input[type="number"] {
   width: 90px;
 }
 
-@media screen and (min-width: 600px) {
-  .layout {
-    display: flex;
-    gap: 32px;
-  }
-
-  .region1 {
-    min-width: max-content;
-  }
-}
-
-.region1 p:first-child {
-  margin-top: 0;
-}
-
 input[data-state="dirty"][data-validity="valid"] {
   border: 2px solid green;
 }
@@ -25,8 +10,16 @@ input[data-state="dirty"][data-validity="invalid"] {
   border: 2px solid red;
 }
 
+.region1 p:first-child {
+  margin-top: 0;
+}
+
 .rules {
-  width: max-content;
+  box-sizing: border-box;
+
+  width: 100%;
+  overflow-x: scroll;
+  text-wrap: nowrap;
 
   background-color: #e9e9ed;
   border: 1px solid #8f8f9d;
@@ -51,4 +44,20 @@ input[data-state="dirty"][data-validity="invalid"] {
 
 .stats p {
   margin: 4px 0;
+}
+
+@media screen and (min-width: 600px) {
+  .layout {
+    display: flex;
+    gap: 32px;
+  }
+
+  .region1 {
+    min-width: max-content;
+  }
+
+  .rules {
+    width: max-content;
+    max-width: 325px;
+  }
 }
