@@ -1,11 +1,9 @@
 port module Main exposing (main)
 
 import Browser as B
-import Data.Angle as Angle exposing (Angle)
-import Data.Dictionary as Dictionary
+import Data.Angle exposing (Angle)
 import Data.Field as F
 import Data.Generator as Generator
-import Data.Position exposing (Position)
 import Data.Preset as Preset exposing (Preset)
 import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings exposing (Settings)
@@ -15,9 +13,8 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Encode as JE
-import Lib.Field as F
+import Lib.Field as F exposing (Field)
 import Lib.Input as Input
-import Lib.Maybe as Maybe
 import View.Canvas as Canvas
 import View.LabeledInput as LabeledInput
 import View.Preset as Preset
@@ -36,10 +33,6 @@ main =
 
 
 -- MODEL
-
-
-type alias Field a =
-    F.Field () a
 
 
 type alias Model =
@@ -183,18 +176,6 @@ isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
 initRenderer : Settings -> Renderer Instruction
 initRenderer settings =
     let
-        rules =
-            settings.rules
-
-        axiom =
-            settings.axiom
-
-        iterations =
-            settings.iterations
-
-        dictionary =
-            settings.dictionary
-
         translateOptions =
             Settings.toTranslateOptions settings
 
@@ -206,7 +187,7 @@ initRenderer settings =
 
         instructions =
             chars
-                |> Translator.translate dictionary translateOptions
+                |> Translator.translate settings.dictionary translateOptions
                 |> Transformer.transform transformOptions
     in
     Renderer.init

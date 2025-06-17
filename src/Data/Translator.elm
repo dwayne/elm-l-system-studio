@@ -143,13 +143,13 @@ translateMeaning options meaning state stack =
             )
 
         DrawDot ->
-            Debug.todo "Implement and test DrawDot"
+            ( Nothing, ( state, stack ) )
 
         OpenPolygon ->
-            Debug.todo "Implement and test OpenPolygon"
+            ( Nothing, ( state, stack ) )
 
         ClosePolygon ->
-            Debug.todo "Implement and test ClosePolygon"
+            ( Nothing, ( state, stack ) )
 
         MultiplyLineLength ->
             ( Nothing

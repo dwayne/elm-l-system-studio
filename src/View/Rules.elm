@@ -4,16 +4,12 @@ import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.Keyed as HK
-import Lib.Field as F
+import Lib.Field as F exposing (Field)
 import Lib.Input as Input
 
 
 type Rules
     = Rules State
-
-
-type alias Field a =
-    F.Field () a
 
 
 type alias State =

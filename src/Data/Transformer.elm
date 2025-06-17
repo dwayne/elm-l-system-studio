@@ -87,7 +87,7 @@ transformInstruction toCoords instruction =
 
 
 transformPosition : Config -> Position -> Coords
-transformPosition { x0, y0, s, l, ls } position =
+transformPosition { x0, y0, l, ls } position =
     let
         xw =
             position.x

@@ -1,4 +1,12 @@
-module Data.Renderer exposing (Msg, Renderer, handleAnimationFrame, init, subscriptions, toStats, update)
+module Data.Renderer exposing
+    ( InitOptions
+    , Msg
+    , Renderer
+    , init
+    , subscriptions
+    , toStats
+    , update
+    )
 
 import Browser.Events as BE
 import Json.Encode as JE

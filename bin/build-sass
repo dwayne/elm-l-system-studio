@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+
+#
+# Usage: build-sass [-z] input_file output_file
+#
+
+set -euo pipefail
+
+
+# OPTIONS
+
+
+optimize=0
+
+while getopts "z" opt; do
+  case "$opt" in
+    z) optimize=$(( optimize + 1 )) ;;
+    *) exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+
+# ARGS
+
+
+input_file="${1:?}"
+output_file="${2:?}"
+
+
+# MAIN
+
+
+main () {
+  if ((optimize)); then
+    sass --style=compressed --no-source-map "$input_file" "$output_file"
+  else
+    sass --embed-sources "$input_file" "$output_file"
+  fi
+}
+
+
+# RUN
+
+
+main

@@ -4,54 +4,35 @@ module Lib.Field exposing
     , Type
     , and
     , apply2
-    , apply3
     , apply4
-    , apply5
     , boundedFloat
     , boundedInt
     , char
-    , customFloat
-    , customInt
-    , customString
-    , fail
     , float
     , fromString
     , fromValue
     , get
-    , int
     , isClean
-    , isDirty
     , isEmpty
     , isInvalid
     , isValid
-    , mapError
     , nonEmptyString
     , nonNegativeFloat
     , nonNegativeInt
-    , optional
-    , optionalFloat
-    , optionalInt
-    , parseError
-    , positiveFloat
-    , positiveInt
-    , required
-    , setError
-    , string
     , toMaybe
-    , toResult
     , toString
     , trim
     , validationError
     )
 
 
-type Field e a
-    = Field (State e a)
+type Field a
+    = Field (State a)
 
 
-type alias State e a =
+type alias State a =
     { raw : Raw
-    , processed : Result (Error e) a
+    , processed : Result Error a
     }
 
 
@@ -60,27 +41,20 @@ type Raw
     | Dirty String
 
 
-type Error e
+type Error
     = Required
     | ParseError
     | ValidationError
-    | Failure String
-    | Custom e
 
 
-type alias Type e a =
+type alias Type a =
     { toString : a -> String
-    , toValue : String -> Result (Error e) a
-    , validate : a -> Result (Error e) a
+    , toValue : String -> Result Error a
+    , validate : a -> Result Error a
     }
 
 
-int : Type e Int
-int =
-    customInt Ok
-
-
-nonNegativeInt : Type e Int
+nonNegativeInt : Type Int
 nonNegativeInt =
     customInt
         (\n ->
@@ -92,19 +66,7 @@ nonNegativeInt =
         )
 
 
-positiveInt : Type e Int
-positiveInt =
-    customInt
-        (\n ->
-            if n > 0 then
-                Ok n
-
-            else
-                validationError
-        )
-
-
-boundedInt : { min : Int, max : Int } -> Type e Int
+boundedInt : { min : Int, max : Int } -> Type Int
 boundedInt { min, max } =
     customInt
         (\n ->
@@ -116,7 +78,7 @@ boundedInt { min, max } =
         )
 
 
-customInt : (Int -> Result (Error e) Int) -> Type e Int
+customInt : (Int -> Result Error Int) -> Type Int
 customInt validate =
     { toString = String.fromInt
     , toValue = trim >> Result.andThen (String.toInt >> Maybe.map validate >> Maybe.withDefault parseError)
@@ -124,29 +86,12 @@ customInt validate =
     }
 
 
-optionalInt : Type e (Maybe Int)
-optionalInt =
-    { toString = Maybe.map String.fromInt >> Maybe.withDefault ""
-    , toValue =
-        optional
-            (\s ->
-                case String.toInt s of
-                    Just n ->
-                        Ok (Just n)
-
-                    Nothing ->
-                        parseError
-            )
-    , validate = Ok
-    }
-
-
-float : Type e Float
+float : Type Float
 float =
     customFloat Ok
 
 
-nonNegativeFloat : Type e Float
+nonNegativeFloat : Type Float
 nonNegativeFloat =
     customFloat
         (\f ->
@@ -158,19 +103,7 @@ nonNegativeFloat =
         )
 
 
-positiveFloat : Type e Float
-positiveFloat =
-    customFloat
-        (\f ->
-            if f > 0 then
-                Ok f
-
-            else
-                validationError
-        )
-
-
-boundedFloat : { min : Float, max : Float } -> Type e Float
+boundedFloat : { min : Float, max : Float } -> Type Float
 boundedFloat { min, max } =
     customFloat
         (\f ->
@@ -182,7 +115,7 @@ boundedFloat { min, max } =
         )
 
 
-customFloat : (Float -> Result (Error e) Float) -> Type e Float
+customFloat : (Float -> Result Error Float) -> Type Float
 customFloat validate =
     { toString = String.fromFloat
     , toValue = trim >> Result.andThen (String.toFloat >> Maybe.map validate >> Maybe.withDefault parseError)
@@ -190,34 +123,12 @@ customFloat validate =
     }
 
 
-optionalFloat : Type e (Maybe Float)
-optionalFloat =
-    { toString = Maybe.map String.fromFloat >> Maybe.withDefault ""
-    , toValue =
-        optional
-            (\s ->
-                case String.toFloat s of
-                    Just f ->
-                        Ok (Just f)
-
-                    Nothing ->
-                        parseError
-            )
-    , validate = Ok
-    }
-
-
-string : Type e String
-string =
-    customString (String.trim >> Ok)
-
-
-nonEmptyString : Type e String
+nonEmptyString : Type String
 nonEmptyString =
     customString trim
 
 
-customString : (String -> Result (Error e) String) -> Type e String
+customString : (String -> Result Error String) -> Type String
 customString validate =
     { toString = identity
     , toValue = validate
@@ -225,7 +136,7 @@ customString validate =
     }
 
 
-char : (Char -> Bool) -> Type e Char
+char : (Char -> Bool) -> Type Char
 char isGood =
     let
         validate ch =
@@ -251,7 +162,7 @@ char isGood =
     }
 
 
-trim : String -> Result (Error e) String
+trim : String -> Result Error String
 trim s =
     let
         t =
@@ -264,40 +175,22 @@ trim s =
         Ok t
 
 
-optional : (String -> Result (Error e) (Maybe a)) -> String -> Result (Error e) (Maybe a)
-optional parse s =
-    let
-        t =
-            String.trim s
-    in
-    if String.isEmpty t then
-        Ok Nothing
-
-    else
-        parse t
-
-
-required : Result (Error e) a
+required : Result Error a
 required =
     Err Required
 
 
-parseError : Result (Error e) a
+parseError : Result Error a
 parseError =
     Err ParseError
 
 
-validationError : Result (Error e) a
+validationError : Result Error a
 validationError =
     Err ValidationError
 
 
-fail : String -> Result (Error e) a
-fail =
-    Err << Failure
-
-
-fromString : Type e a -> Bool -> String -> Field e a
+fromString : Type a -> Bool -> String -> Field a
 fromString tipe isInitial s =
     Field
         { raw =
@@ -312,7 +205,7 @@ fromString tipe isInitial s =
         }
 
 
-fromValue : Type e a -> Bool -> a -> Field e a
+fromValue : Type a -> Bool -> a -> Field a
 fromValue tipe isInitial value =
     Field
         { raw =
@@ -327,12 +220,7 @@ fromValue tipe isInitial value =
         }
 
 
-setError : Error e -> Field e a -> Field e a
-setError error (Field state) =
-    Field { state | processed = Err error }
-
-
-isEmpty : Field e a -> Bool
+isEmpty : Field a -> Bool
 isEmpty (Field { raw }) =
     case raw of
         Initial s ->
@@ -342,7 +230,7 @@ isEmpty (Field { raw }) =
             String.isEmpty s
 
 
-isClean : Field e a -> Bool
+isClean : Field a -> Bool
 isClean (Field { raw }) =
     case raw of
         Initial _ ->
@@ -352,17 +240,7 @@ isClean (Field { raw }) =
             False
 
 
-isDirty : Field e a -> Bool
-isDirty (Field { raw }) =
-    case raw of
-        Dirty _ ->
-            True
-
-        _ ->
-            False
-
-
-isValid : Field e a -> Bool
+isValid : Field a -> Bool
 isValid (Field { processed }) =
     case processed of
         Ok _ ->
@@ -372,7 +250,7 @@ isValid (Field { processed }) =
             False
 
 
-isInvalid : Field e a -> Bool
+isInvalid : Field a -> Bool
 isInvalid (Field { processed }) =
     case processed of
         Err _ ->
@@ -382,7 +260,7 @@ isInvalid (Field { processed }) =
             False
 
 
-toString : Field e a -> String
+toString : Field a -> String
 toString (Field { raw }) =
     case raw of
         Initial s ->
@@ -392,41 +270,14 @@ toString (Field { raw }) =
             s
 
 
-toResult : Field e a -> Result (Error e) a
+toResult : Field a -> Result Error a
 toResult (Field { processed }) =
     processed
 
 
-toMaybe : Field e a -> Maybe a
+toMaybe : Field a -> Maybe a
 toMaybe (Field { processed }) =
     Result.toMaybe processed
-
-
-mapError : (e1 -> e2) -> Field e1 a -> Field e2 a
-mapError f (Field state) =
-    Field
-        { raw = state.raw
-        , processed =
-            Result.mapError
-                (\error ->
-                    case error of
-                        Required ->
-                            Required
-
-                        ParseError ->
-                            ParseError
-
-                        ValidationError ->
-                            ValidationError
-
-                        Failure s ->
-                            Failure s
-
-                        Custom e1 ->
-                            Custom (f e1)
-                )
-                state.processed
-        }
 
 
 
@@ -435,32 +286,22 @@ mapError f (Field state) =
 --
 
 
-apply2 : (a -> b -> value) -> Field x a -> Field x b -> Result (Error x) value
+apply2 : (a -> b -> value) -> Field a -> Field b -> Result Error value
 apply2 f field1 field2 =
     Result.map2 f (toResult field1) (toResult field2)
 
 
-apply3 : (a -> b -> c -> value) -> Field x a -> Field x b -> Field x c -> Result (Error x) value
-apply3 f field1 field2 field3 =
-    Result.map3 f (toResult field1) (toResult field2) (toResult field3)
-
-
-apply4 : (a -> b -> c -> d -> value) -> Field x a -> Field x b -> Field x c -> Field x d -> Result (Error x) value
+apply4 : (a -> b -> c -> d -> value) -> Field a -> Field b -> Field c -> Field d -> Result Error value
 apply4 f field1 field2 field3 field4 =
     Result.map4 f (toResult field1) (toResult field2) (toResult field3) (toResult field4)
 
 
-apply5 : (a -> b -> c -> d -> e -> value) -> Field x a -> Field x b -> Field x c -> Field x d -> Field x e -> Result (Error x) value
-apply5 f field1 field2 field3 field4 field5 =
-    Result.map5 f (toResult field1) (toResult field2) (toResult field3) (toResult field4) (toResult field5)
-
-
-get : Field e a -> (a -> b) -> Result (Error e) b
+get : Field a -> (a -> b) -> Result Error b
 get field f =
     Result.map f (toResult field)
 
 
-and : Field e a -> Result (Error e) (a -> b) -> Result (Error e) b
+and : Field a -> Result Error (a -> b) -> Result Error b
 and field rf =
     case ( toResult field, rf ) of
         ( Ok a, Ok f ) ->

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+#
+# Usage: serve [-p 3000] root
+#
+
+set -euo pipefail
+
+
+# OPTIONS
+
+
+port=3000
+
+while getopts "p:" opt; do
+  case "$opt" in
+    p) port="$OPTARG" ;;
+    *) exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+
+# ARGS
+
+
+root="${1:?}"
+
+
+# RUN
+
+
+caddy file-server --browse --listen :"$port" --root "$root"

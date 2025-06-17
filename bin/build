@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+#
+# Usage: build [-s options-for-build-sass] [-e options-for-build-elm] out
+#
+
+set -euo pipefail
+
+
+# OPTIONS
+
+
+build_sass_options=
+build_elm_options=
+
+while getopts "s:e:" opt; do
+  case "$opt" in
+    s) build_sass_options="$OPTARG" ;;
+    e) build_elm_options="$OPTARG" ;;
+    *) exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+
+# ARGS
+
+
+out="${1:?}"
+
+
+# MAIN
+
+
+src="${project:?}"
+
+main () {
+  clean
+  prepare
+  copy-public
+  run-build-sass
+  run-build-elm
+}
+
+clean () {
+  rm -rf "$out"
+}
+
+prepare () {
+  mkdir -p "$out"
+}
+
+copy-public () {
+  cp -r "$src/public/"* "$out"
+}
+
+run-build-sass () {
+  if [ -z "$build_sass_options" ]; then
+    build-sass "$src/sass/index.scss" "$out/index.css"
+  else
+    build-sass "$build_sass_options" "$src/sass/index.scss" "$out/index.css"
+  fi
+}
+
+run-build-elm () {
+  if [ -z "$build_elm_options" ]; then
+    build-elm "$src/src/Main.elm" "$out/app.js"
+  else
+    build-elm "$build_elm_options" "$src/src/Main.elm" "$out/app.js"
+  fi
+}
+
+
+# RUN
+
+
+main

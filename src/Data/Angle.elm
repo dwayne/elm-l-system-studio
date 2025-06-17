@@ -2,13 +2,11 @@ module Data.Angle exposing
     ( Angle
     , add
     , fromDegrees
-    , negate
     , right
     , sinAndCos
     , straight
     , sub
     , toDegrees
-    , toRadians
     , zero
     )
 
@@ -35,11 +33,6 @@ straight =
 fromDegrees : Float -> Angle
 fromDegrees =
     Deg << normalize
-
-
-negate : Angle -> Angle
-negate (Deg a) =
-    fromDegrees -a
 
 
 add : Angle -> Angle -> Angle
@@ -79,11 +72,6 @@ sinAndCos (Deg angle) =
 toDegrees : Angle -> Float
 toDegrees (Deg angle) =
     angle
-
-
-toRadians : Angle -> Float
-toRadians (Deg angle) =
-    degrees angle
 
 
 normalize : Float -> Float

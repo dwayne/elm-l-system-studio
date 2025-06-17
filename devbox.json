@@ -4,16 +4,25 @@
       "version": "latest",
       "disable_plugin": true
     },
+    "dart-sass": "latest",
     "elmPackages.elm": "latest",
     "elmPackages.elm-format": "latest",
-    "elmPackages.elm-test": "latest"
+    "elmPackages.elm-json": "latest",
+    "elmPackages.elm-optimize-level-2": "latest",
+    "elmPackages.elm-review": "latest",
+    "elmPackages.elm-test": "latest",
+    "rsync": "latest",
+    "shellcheck": "latest",
+    "terser": "latest"
+  },
+  "env": {
+    "PATH": "$DEVBOX_PROJECT_ROOT/bin:$PATH",
+    "build": "$DEVBOX_PROJECT_ROOT/.build",
+    "project": "$DEVBOX_PROJECT_ROOT"
   },
   "shell": {
     "init_hook": [
-      "alias f='elm-format src/ tests/ --yes'",
-      "alias t=elm-test",
-      "alias b='elm make src/Main.elm --debug --output public/app.js'",
-      "alias s='caddy file-server --browse --listen :8000 --root public'"
+      ". $project/init.sh"
     ]
   }
 }

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+#
+# Usage: check [-v]
+#
+
+set -uo pipefail
+
+
+# OPTIONS
+
+
+verbose=0
+
+while getopts "v" opt; do
+  case "$opt" in
+    v) verbose=$(( verbose + 1 )) ;;
+    *) exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+
+# MAIN
+
+
+main () {
+  run check-scripts
+  run format --validate
+  run test-elm
+  run test-elm-main
+  run review
+
+  display "Everything looks good!"
+}
+
+run () {
+  display "Running \"$*\"..."
+
+  command=$*
+  output=$($command 2>&1)
+  error=$?
+  if (( error )); then
+    fail "$output"
+  fi
+}
+
+display () {
+  if ((verbose)); then
+    echo "$1"
+  fi
+}
+
+fail () {
+  echo "$1" >&2
+  exit 1
+}
+
+
+# RUN
+
+
+main

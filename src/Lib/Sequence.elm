@@ -1,8 +1,6 @@
 module Lib.Sequence exposing
     ( Sequence(..)
-    , concat
     , concatMap
-    , cons
     , empty
     , filterMapWithState
     , fromString
@@ -33,11 +31,6 @@ empty =
 singleton : a -> Sequence a
 singleton x =
     Cons x Empty
-
-
-cons : a -> Sequence a -> Sequence a
-cons =
-    Cons
 
 
 fromString : String -> Sequence Char

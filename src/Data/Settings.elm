@@ -12,7 +12,6 @@ module Data.Settings exposing
     , cross1
     , cross2
     , crystal
-    , default
     , dragonCurve
     , hexagonalGosper
     , hilbert
@@ -21,7 +20,6 @@ module Data.Settings exposing
     , krishnaAnklets
     , leaf
     , levyCurve
-    , mangoLeaf
     , peanoCurve
     , pentaplexity
     , quadraticGosper
@@ -32,7 +30,6 @@ module Data.Settings exposing
     , quadraticSnowflake2
     , rings
     , sierpinskiArrowhead
-    , snakeKolam
     , squareSierpinski
     , sticks
     , tiles
@@ -749,43 +746,6 @@ krishnaAnklets =
         , turningAngle = Angle.fromDegrees 45
         , windowPosition = { x = -46, y = -91 }
         , windowSize = 92
-    }
-
-
-mangoLeaf : Settings
-mangoLeaf =
-    --
-    -- TODO: Implement openPolygon and closePolygon.
-    --
-    { default
-        | rules =
-            [ ( 'X', "{F-F}{F-F}--[--X]{F-F}{F-F}--{F-F}{F-F}--" )
-            , ( 'Y', "f-F+X+F-fY" )
-            ]
-        , axiom = "Y---Y"
-        , iterations = 1
-        , lineLength = 1
-        , turningAngle = Angle.fromDegrees 60
-        , windowPosition = { x = -2, y = -3 }
-        , windowSize = 7
-    }
-
-
-snakeKolam : Settings
-snakeKolam =
-    --
-    -- TODO: Implement openPolygon and closePolygon.
-    --
-    { default
-        | rules =
-            [ ( 'X', "X{F-F-F}+XF+F+X{F-F-F}+X" )
-            ]
-        , axiom = "F+XF+F+XF"
-        , iterations = 1
-        , lineLength = 1
-        , turningAngle = Angle.right
-        , windowPosition = { x = -60, y = -160 }
-        , windowSize = 600
     }
 
 

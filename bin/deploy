@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+#
+# Usage: deploy [-s] root branch_name
+#
+
+set -euo pipefail
+
+
+# OPTIONS
+
+
+simulate=0
+
+while getopts "s" opt
+do
+  case $opt in
+    s) simulate=1 ;;
+    *) exit 1 ;;
+  esac
+done
+shift "$(( OPTIND - 1 ))"
+
+
+# ARGS
+
+
+root="${1:?}"
+branch_name="${2:?}"
+
+
+# MAIN
+
+
+if ((simulate)); then
+  echo "ATTENTION!!! This is only a simulation"
+  set -x
+fi
+
+# CHECK BRANCH
+
+current_branch="$(git branch --show-current)"
+if [ "$current_branch" != master ]; then
+  echo "You are currently on the branch: $current_branch"
+  #
+  # NOTE:
+  #
+  # Usually you'd want to deploy from the master branch. On rare
+  # occassions you'd deploy from another branch. So deploying
+  # from a different branch could be a mistake and that's why we
+  # verify if you want to continue with the deploy.
+  #
+  read -r -n 1 -t 30 -p "Are you sure want to continue? (y/N) "
+  case $REPLY in
+    y | Y ) echo ;;
+    * ) exit 1 ;;
+  esac
+fi
+
+# PREPARE DEPLOY DIRECTORY
+
+out="$(mktemp -d -t deploy-XXXXX)"
+echo "Prepared the deploy directory: $out"
+
+# PREPARE WORKTREE
+
+if ! ((simulate)); then
+  git worktree add "$out" "$branch_name"
+  git -C "$out" pull
+fi
+
+# DEPLOY
+
+hash="$(git log -n 1 --format='%h' "$current_branch")"
+message="Site updated to commit $hash from the $current_branch branch"
+
+rsync -rptgovzP --delete --exclude=".git" "$root/" "$out"
+#
+# --recursive, -r   = recurse into directories
+# --perms, -p       = preserve permissions
+# --times, -t       = preserve modification times
+# --group, -g       = preserve group
+# --owner, -o       = preserve owner (super-user only)
+# --verbose, -v     = increase verbosity
+# --compress, -z    = compress file data during the transfer
+#
+# -P                = same as --partial --progress
+# --partial         = keep partially transferred files
+# --progress        = show progress during transfer
+#
+# --delete          = delete extraneous files from dest dirs
+#
+# --exclude=PATTERN = exclude files matching PATTERN
+#
+
+if ((simulate)); then
+  echo "message=$message"
+else
+  git -C "$out" add .
+
+  if git -C "$out" diff --cached --quiet; then
+    echo "No changes detected"
+  else
+    git -C "$out" commit -m "$message"
+    git -C "$out" push -u origin HEAD
+  fi
+fi
+
+# CLEAN UP
+
+if ((simulate)); then
+  echo "Please run \"rm -rf $out\" when you're done"
+else
+  git worktree remove --force "$out"
+  rm -rf "$out"
+
+  echo "Success!"
+fi

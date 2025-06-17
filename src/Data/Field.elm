@@ -12,7 +12,7 @@ import Data.Preset as Preset exposing (Preset)
 import Lib.Field as F
 
 
-preset : F.Type e Preset
+preset : F.Type Preset
 preset =
     let
         toValue s =
@@ -29,7 +29,7 @@ preset =
     }
 
 
-angle : F.Type e Angle
+angle : F.Type Angle
 angle =
     { toString = Angle.toDegrees >> String.fromFloat
     , toValue = F.trim >> Result.andThen (String.toFloat >> Maybe.map (Ok << Angle.fromDegrees) >> Maybe.withDefault F.validationError)
@@ -37,21 +37,21 @@ angle =
     }
 
 
-fps : F.Type e Int
+fps : F.Type Int
 fps =
     F.boundedInt { min = 1, max = 60 }
 
 
-ipf : F.Type e Int
+ipf : F.Type Int
 ipf =
     F.boundedInt { min = 1, max = 1000000 }
 
 
-panIncrement : F.Type e Float
+panIncrement : F.Type Float
 panIncrement =
     F.boundedFloat { min = 1, max = 1000000 }
 
 
-zoomIncrement : F.Type e Float
+zoomIncrement : F.Type Float
 zoomIncrement =
     F.boundedFloat { min = 1, max = 1000 }

@@ -2,7 +2,6 @@ module Lib.Input exposing
     ( Type(..)
     , ViewOptions
     , float
-    , int
     , nonNegativeFloat
     , nonNegativeInt
     , string
@@ -15,12 +14,12 @@ import Html.Events as HE
 import Lib.Field as Field exposing (Field)
 
 
-type alias ViewOptions e a msg =
+type alias ViewOptions a msg =
     { tipe : Type
     , isRequired : Bool
     , isDisabled : Bool
     , attrs : List (H.Attribute msg)
-    , field : Field e a
+    , field : Field a
     , onInput : String -> msg
     }
 
@@ -42,11 +41,6 @@ string =
     String
 
 
-int : Type
-int =
-    Int { min = Nothing, max = Nothing }
-
-
 nonNegativeInt : Type
 nonNegativeInt =
     Int { min = Just 0, max = Nothing }
@@ -62,7 +56,7 @@ nonNegativeFloat =
     Float { min = Just 0, max = Nothing }
 
 
-view : ViewOptions e a msg -> H.Html msg
+view : ViewOptions a msg -> H.Html msg
 view { tipe, isRequired, isDisabled, attrs, field, onInput } =
     let
         typeAttrs =

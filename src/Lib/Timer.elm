@@ -1,4 +1,4 @@
-module Lib.Timer exposing (Timer, getExpectedFps, new, step, toStats)
+module Lib.Timer exposing (Stats, Timer, getExpectedFps, new, step, toStats)
 
 
 type Timer

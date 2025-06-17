@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+#
+# Usage: build-elm [-z] input_file output_file
+#
+
+set -euo pipefail
+
+
+# OPTIONS
+
+
+optimize=0
+
+while getopts "z" opt; do
+  case "$opt" in
+    z) optimize=$(( optimize + 1 )) ;;
+    *) exit 1 ;;
+  esac
+done
+shift $(( OPTIND - 1 ))
+
+
+# ARGS
+
+
+input_file="${1:?}"
+output_file="${2:?}"
+
+
+# MAIN
+
+
+main () {
+  if (( optimize == 0 )); then
+    func=elm-make-debug
+  elif (( optimize < 4 )); then
+    func=elm-make-optimize-"$optimize"
+  else
+    func=elm-make-optimize-3
+  fi
+
+  "$func" "$input_file" "$output_file"
+}
+
+elm-make-debug () {
+  elm make "$1" --debug --output "$2"
+}
+
+elm-make-optimize-1 () {
+  elm make "$1" --optimize --output "$2"
+  minify "$2"
+}
+
+elm-make-optimize-2 () {
+  elm-optimize-level-2 "$1" --output "$2"
+  minify "$2"
+}
+
+elm-make-optimize-3 () {
+  elm-optimize-level-2 "$1" --optimize-speed --output "$2"
+  minify "$2"
+}
+
+minify () {
+  js="$1"
+  min="${js%.js}.min.js"
+
+  terser "$js" --compress 'pure_funcs="F2,F3,F4,F5,F6,F7,F8,F9,A2,A3,A4,A5,A6,A7,A8,A9",pure_getters,keep_fargs=false,unsafe_comps,unsafe' | terser --mangle --output "$min"
+  mv "$min" "$js"
+}
+
+
+# RUN
+
+
+main
