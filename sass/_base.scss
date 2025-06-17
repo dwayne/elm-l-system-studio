@@ -1,0 +1,63 @@
+input[type="number"] {
+  width: 90px;
+}
+
+input[data-state="dirty"][data-validity="valid"] {
+  border: 2px solid green;
+}
+
+input[data-state="dirty"][data-validity="invalid"] {
+  border: 2px solid red;
+}
+
+.region1 p:first-child {
+  margin-top: 0;
+}
+
+.rules {
+  box-sizing: border-box;
+
+  width: 100%;
+  overflow-x: scroll;
+  text-wrap: nowrap;
+
+  background-color: #e9e9ed;
+  border: 1px solid #8f8f9d;
+  padding: 5px;
+}
+
+.remove-rule {
+  visibility: hidden;
+}
+
+.rule:hover .remove-rule {
+  visibility: visible;
+}
+
+.canvas {
+  border: 1px solid #333;
+}
+
+.stats {
+  font-size: 12px;
+}
+
+.stats p {
+  margin: 4px 0;
+}
+
+@media screen and (min-width: 600px) {
+  .layout {
+    display: flex;
+    gap: 32px;
+  }
+
+  .region1 {
+    min-width: max-content;
+  }
+
+  .rules {
+    width: max-content;
+    max-width: 325px;
+  }
+}
