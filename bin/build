@@ -52,6 +52,7 @@ prepare () {
 
 copy-public () {
   cp -r "$src/public/"* "$out"
+  cp "$src/public/.nojekyll" "$out"
 }
 
 run-build-sass () {
