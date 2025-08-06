@@ -1,10 +1,10 @@
 module View.Rules exposing (Msg, Rules, ViewOptions, init, toValue, update, view)
 
+import Field as F exposing (Field)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.Keyed as HK
-import Lib.Field as F exposing (Field)
 import Lib.Input as Input
 
 
@@ -43,8 +43,8 @@ init rawMapping =
             List.length mapping
     in
     Rules
-        { ch = F.fromValue (F.char isValidChar) True 'F'
-        , replacement = F.fromString F.nonEmptyString True ""
+        { ch = F.fromValue (F.subsetOfChar isValidChar) 'F'
+        , replacement = F.empty F.nonBlankString
         , id = id
         , mapping = mapping
         }
@@ -80,24 +80,24 @@ update : Msg -> Rules -> Rules
 update msg ((Rules state) as rules) =
     case msg of
         InputCh s ->
-            Rules { state | ch = F.fromString (F.char isValidChar) False s }
+            Rules { state | ch = F.setFromString s state.ch }
 
         InputReplacement s ->
-            Rules { state | replacement = F.fromString F.nonEmptyString False s }
+            Rules { state | replacement = F.setFromString s state.replacement }
 
         ClickedAddRule ->
-            Maybe.map2
-                (\ch replacement ->
-                    Rules
-                        { state
-                            | ch = F.fromValue (F.char isValidChar) True 'F'
-                            , replacement = F.fromString F.nonEmptyString True ""
-                            , id = state.id + 1
-                            , mapping = state.mapping ++ [ ( state.id, ( ch, replacement ) ) ]
-                        }
-                )
-                (F.toMaybe state.ch)
-                (F.toMaybe state.replacement)
+            (\ch replacement ->
+                Rules
+                    { state
+                        | ch = F.fromValue (F.subsetOfChar isValidChar) 'F'
+                        , replacement = F.empty F.nonBlankString
+                        , id = state.id + 1
+                        , mapping = state.mapping ++ [ ( state.id, ( ch, replacement ) ) ]
+                    }
+            )
+                |> Just
+                |> F.applyMaybe state.ch
+                |> F.applyMaybe state.replacement
                 |> Maybe.withDefault rules
 
         ClickedRemoveRule id ->

@@ -1,15 +1,15 @@
 module View.Preset exposing (ViewOptions, view)
 
 import Data.Preset as Preset exposing (Preset)
+import Field as F exposing (Field)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
-import Lib.Field as F
 
 
 type alias ViewOptions msg =
-    { preset : F.Field Preset
+    { preset : Field Preset
     , onPreset : Preset -> msg
     }
 

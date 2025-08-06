@@ -9,11 +9,11 @@ import Data.Renderer as Renderer exposing (Renderer)
 import Data.Settings as Settings exposing (Settings)
 import Data.Transformer as Transformer exposing (Instruction)
 import Data.Translator as Translator
+import Field as F exposing (Field)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Encode as JE
-import Lib.Field as F exposing (Field)
 import Lib.Input as Input
 import View.Canvas as Canvas
 import View.LabeledInput as LabeledInput
@@ -59,32 +59,32 @@ type alias Model =
 init : () -> ( Model, Cmd msg )
 init =
     always
-        ( initFromPreset True Preset.default
+        ( initFromPreset Preset.default
         , clear ()
         )
 
 
-initFromPreset : Bool -> Preset -> Model
-initFromPreset isInitial preset =
+initFromPreset : Preset -> Model
+initFromPreset preset =
     let
         { settings } =
             preset
     in
-    { preset = F.fromValue F.preset isInitial preset
+    { preset = F.fromValue F.preset preset
     , rules = Rules.init settings.rules
-    , axiom = F.fromString F.nonEmptyString True settings.axiom
-    , iterations = F.fromValue F.nonNegativeInt True settings.iterations
-    , startHeading = F.fromValue F.angle True settings.startHeading
-    , lineLength = F.fromValue F.nonNegativeFloat True settings.lineLength
-    , lineLengthScaleFactor = F.fromValue F.nonNegativeFloat True settings.lineLengthScaleFactor
-    , turningAngle = F.fromValue F.angle True settings.turningAngle
-    , windowPositionX = F.fromValue F.float True settings.windowPosition.x
-    , windowPositionY = F.fromValue F.float True settings.windowPosition.y
-    , windowSize = F.fromValue F.nonNegativeFloat True settings.windowSize
-    , fps = F.fromValue F.fps True settings.fps
-    , ipf = F.fromValue F.ipf True settings.ipf
-    , panIncrement = F.fromValue F.panIncrement True 10
-    , zoomIncrement = F.fromValue F.zoomIncrement True 10
+    , axiom = F.fromString F.nonBlankString settings.axiom
+    , iterations = F.fromValue F.nonNegativeInt settings.iterations
+    , startHeading = F.fromValue F.angle settings.startHeading
+    , lineLength = F.fromValue F.nonNegativeFloat settings.lineLength
+    , lineLengthScaleFactor = F.fromValue F.nonNegativeFloat settings.lineLengthScaleFactor
+    , turningAngle = F.fromValue F.angle settings.turningAngle
+    , windowPositionX = F.fromValue F.float settings.windowPosition.x
+    , windowPositionY = F.fromValue F.float settings.windowPosition.y
+    , windowSize = F.fromValue F.nonNegativeFloat settings.windowSize
+    , fps = F.fromValue F.fps settings.fps
+    , ipf = F.fromValue F.ipf settings.ipf
+    , panIncrement = F.fromValue F.panIncrement 10
+    , zoomIncrement = F.fromValue F.zoomIncrement 10
     , settings = settings
     , renderer = initRenderer settings
     }
@@ -96,7 +96,7 @@ render model =
         oldSettings =
             model.settings
 
-        resultNewSettings =
+        maybeNewSettings =
             (\axiom iterations startHeading lineLength lineLengthScaleFactor turningAngle windowPositionX windowPositionY windowSize fps ipf ->
                 { oldSettings
                     | rules = Rules.toValue model.rules
@@ -112,25 +112,26 @@ render model =
                     , ipf = ipf
                 }
             )
-                |> F.get model.axiom
-                |> F.and model.iterations
-                |> F.and model.startHeading
-                |> F.and model.lineLength
-                |> F.and model.lineLengthScaleFactor
-                |> F.and model.turningAngle
-                |> F.and model.windowPositionX
-                |> F.and model.windowPositionY
-                |> F.and model.windowSize
-                |> F.and model.fps
-                |> F.and model.ipf
+                |> Just
+                |> F.applyMaybe model.axiom
+                |> F.applyMaybe model.iterations
+                |> F.applyMaybe model.startHeading
+                |> F.applyMaybe model.lineLength
+                |> F.applyMaybe model.lineLengthScaleFactor
+                |> F.applyMaybe model.turningAngle
+                |> F.applyMaybe model.windowPositionX
+                |> F.applyMaybe model.windowPositionY
+                |> F.applyMaybe model.windowSize
+                |> F.applyMaybe model.fps
+                |> F.applyMaybe model.ipf
     in
-    case resultNewSettings of
-        Ok newSettings ->
+    case maybeNewSettings of
+        Just newSettings ->
             ( { model | settings = newSettings, renderer = initRenderer newSettings }
             , clear ()
             )
 
-        Err _ ->
+        Nothing ->
             ( model
             , Cmd.none
             )
@@ -160,17 +161,17 @@ isValidZoomIncrement :
     }
     -> Bool
 isValidZoomIncrement { isZoomingIn, windowSize, zoomIncrement } =
-    F.apply2
-        (\size inc ->
-            if isZoomingIn then
-                size >= 2 * inc
+    (\size inc ->
+        if isZoomingIn then
+            size >= 2 * inc
 
-            else
-                True
-        )
-        windowSize
-        zoomIncrement
-        |> Result.withDefault False
+        else
+            True
+    )
+        |> Just
+        |> F.applyMaybe windowSize
+        |> F.applyMaybe zoomIncrement
+        |> Maybe.withDefault False
 
 
 initRenderer : Settings -> Renderer Instruction
@@ -244,7 +245,7 @@ update msg model =
                 adjustedPreset =
                     { preset | settings = adjustedSettings }
             in
-            ( initFromPreset False adjustedPreset
+            ( initFromPreset adjustedPreset
             , clear ()
             )
 
@@ -254,67 +255,67 @@ update msg model =
             )
 
         InputAxiom s ->
-            ( { model | axiom = F.fromString F.nonEmptyString False s }
+            ( { model | axiom = F.setFromString s model.axiom }
             , Cmd.none
             )
 
         InputIterations s ->
-            ( { model | iterations = F.fromString F.nonNegativeInt False s }
+            ( { model | iterations = F.setFromString s model.iterations }
             , Cmd.none
             )
 
         InputStartHeading s ->
-            ( { model | startHeading = F.fromString F.angle False s }
+            ( { model | startHeading = F.setFromString s model.startHeading }
             , Cmd.none
             )
 
         InputLineLength s ->
-            ( { model | lineLength = F.fromString F.nonNegativeFloat False s }
+            ( { model | lineLength = F.setFromString s model.lineLength }
             , Cmd.none
             )
 
         InputLineLengthScaleFactor s ->
-            ( { model | lineLengthScaleFactor = F.fromString F.nonNegativeFloat False s }
+            ( { model | lineLengthScaleFactor = F.setFromString s model.lineLengthScaleFactor }
             , Cmd.none
             )
 
         InputTurningAngle s ->
-            ( { model | turningAngle = F.fromString F.angle False s }
+            ( { model | turningAngle = F.setFromString s model.turningAngle }
             , Cmd.none
             )
 
         InputWindowPositionX s ->
-            ( { model | windowPositionX = F.fromString F.float False s }
+            ( { model | windowPositionX = F.setFromString s model.windowPositionX }
             , Cmd.none
             )
 
         InputWindowPositionY s ->
-            ( { model | windowPositionY = F.fromString F.float False s }
+            ( { model | windowPositionY = F.setFromString s model.windowPositionY }
             , Cmd.none
             )
 
         InputWindowSize s ->
-            ( { model | windowSize = F.fromString F.nonNegativeFloat False s }
+            ( { model | windowSize = F.setFromString s model.windowSize }
             , Cmd.none
             )
 
         InputFps s ->
-            ( { model | fps = F.fromString F.fps False s }
+            ( { model | fps = F.setFromString s model.fps }
             , Cmd.none
             )
 
         InputIpf s ->
-            ( { model | ipf = F.fromString F.ipf False s }
+            ( { model | ipf = F.setFromString s model.ipf }
             , Cmd.none
             )
 
         InputPanIncrement s ->
-            ( { model | panIncrement = F.fromString F.panIncrement False s }
+            ( { model | panIncrement = F.setFromString s model.panIncrement }
             , Cmd.none
             )
 
         InputZoomIncrement s ->
-            ( { model | zoomIncrement = F.fromString F.zoomIncrement False s }
+            ( { model | zoomIncrement = F.setFromString s model.zoomIncrement }
             , Cmd.none
             )
 
@@ -322,73 +323,73 @@ update msg model =
             render model
 
         ClickedLeft ->
-            F.apply2
-                (\windowPositionX panIncrement ->
-                    render { model | windowPositionX = F.fromValue F.float False (windowPositionX - panIncrement) }
-                )
-                model.windowPositionX
-                model.panIncrement
-                |> Result.withDefault ( model, Cmd.none )
+            (\windowPositionX panIncrement ->
+                render { model | windowPositionX = F.setFromValue (windowPositionX - panIncrement) model.windowPositionX }
+            )
+                |> Just
+                |> F.applyMaybe model.windowPositionX
+                |> F.applyMaybe model.panIncrement
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedRight ->
-            F.apply2
-                (\windowPositionX panIncrement ->
-                    render { model | windowPositionX = F.fromValue F.float False (windowPositionX + panIncrement) }
-                )
-                model.windowPositionX
-                model.panIncrement
-                |> Result.withDefault ( model, Cmd.none )
+            (\windowPositionX panIncrement ->
+                render { model | windowPositionX = F.setFromValue (windowPositionX + panIncrement) model.windowPositionX }
+            )
+                |> Just
+                |> F.applyMaybe model.windowPositionX
+                |> F.applyMaybe model.panIncrement
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedUp ->
-            F.apply2
-                (\windowPositionY panIncrement ->
-                    render { model | windowPositionY = F.fromValue F.float False (windowPositionY + panIncrement) }
-                )
-                model.windowPositionY
-                model.panIncrement
-                |> Result.withDefault ( model, Cmd.none )
+            (\windowPositionY panIncrement ->
+                render { model | windowPositionY = F.setFromValue (windowPositionY + panIncrement) model.windowPositionY }
+            )
+                |> Just
+                |> F.applyMaybe model.windowPositionY
+                |> F.applyMaybe model.panIncrement
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedDown ->
-            F.apply2
-                (\windowPositionY panIncrement ->
-                    render { model | windowPositionY = F.fromValue F.float False (windowPositionY - panIncrement) }
-                )
-                model.windowPositionY
-                model.panIncrement
-                |> Result.withDefault ( model, Cmd.none )
+            (\windowPositionY panIncrement ->
+                render { model | windowPositionY = F.setFromValue (windowPositionY - panIncrement) model.windowPositionY }
+            )
+                |> Just
+                |> F.applyMaybe model.windowPositionY
+                |> F.applyMaybe model.panIncrement
+                |> Maybe.withDefault ( model, Cmd.none )
 
         ClickedIn ->
             let
                 maybeWindow =
-                    F.apply4
-                        (\x y size inc ->
-                            let
-                                inc2 =
-                                    2 * inc
-                            in
-                            if size >= inc2 then
-                                Just
-                                    { x = x + inc
-                                    , y = y + inc
-                                    , size = size - inc2
-                                    }
+                    (\x y size inc ->
+                        let
+                            inc2 =
+                                2 * inc
+                        in
+                        if size >= inc2 then
+                            Just
+                                { x = x + inc
+                                , y = y + inc
+                                , size = size - inc2
+                                }
 
-                            else
-                                Nothing
-                        )
-                        model.windowPositionX
-                        model.windowPositionY
-                        model.windowSize
-                        model.zoomIncrement
-                        |> Result.withDefault Nothing
+                        else
+                            Nothing
+                    )
+                        |> Just
+                        |> F.applyMaybe model.windowPositionX
+                        |> F.applyMaybe model.windowPositionY
+                        |> F.applyMaybe model.windowSize
+                        |> F.applyMaybe model.zoomIncrement
+                        |> Maybe.withDefault Nothing
             in
             case maybeWindow of
                 Just { x, y, size } ->
                     render
                         { model
-                            | windowPositionX = F.fromValue F.float False x
-                            , windowPositionY = F.fromValue F.float False y
-                            , windowSize = F.fromValue F.nonNegativeFloat False size
+                            | windowPositionX = F.setFromValue x model.windowPositionX
+                            , windowPositionY = F.setFromValue y model.windowPositionY
+                            , windowSize = F.setFromValue size model.windowSize
                         }
 
                 Nothing ->
@@ -396,33 +397,33 @@ update msg model =
 
         ClickedOut ->
             let
-                resultWindow =
-                    F.apply4
-                        (\x y size inc ->
-                            let
-                                inc2 =
-                                    2 * inc
-                            in
-                            { x = x - inc
-                            , y = y - inc
-                            , size = size + inc2
-                            }
-                        )
-                        model.windowPositionX
-                        model.windowPositionY
-                        model.windowSize
-                        model.zoomIncrement
+                maybeWindow =
+                    (\x y size inc ->
+                        let
+                            inc2 =
+                                2 * inc
+                        in
+                        { x = x - inc
+                        , y = y - inc
+                        , size = size + inc2
+                        }
+                    )
+                        |> Just
+                        |> F.applyMaybe model.windowPositionX
+                        |> F.applyMaybe model.windowPositionY
+                        |> F.applyMaybe model.windowSize
+                        |> F.applyMaybe model.zoomIncrement
             in
-            case resultWindow of
-                Ok { x, y, size } ->
+            case maybeWindow of
+                Just { x, y, size } ->
                     render
                         { model
-                            | windowPositionX = F.fromValue F.float False x
-                            , windowPositionY = F.fromValue F.float False y
-                            , windowSize = F.fromValue F.nonNegativeFloat False size
+                            | windowPositionX = F.setFromValue x model.windowPositionX
+                            , windowPositionY = F.setFromValue y model.windowPositionY
+                            , windowSize = F.setFromValue size model.windowSize
                         }
 
-                Err _ ->
+                Nothing ->
                     ( model, Cmd.none )
 
         ChangedRenderer subMsg ->

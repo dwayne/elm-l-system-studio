@@ -1,8 +1,8 @@
 module View.LabeledInput exposing (ViewOptions, view)
 
+import Field exposing (Field)
 import Html as H
 import Html.Attributes as HA
-import Lib.Field exposing (Field)
 import Lib.Input as Input
 
 

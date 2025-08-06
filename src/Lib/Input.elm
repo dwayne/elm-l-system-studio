@@ -8,10 +8,10 @@ module Lib.Input exposing
     , view
     )
 
+import Field as F exposing (Field)
 import Html as H
 import Html.Attributes as HA
 import Html.Events as HE
-import Lib.Field as Field exposing (Field)
 
 
 type alias ViewOptions a msg =
@@ -71,7 +71,7 @@ view { tipe, isRequired, isDisabled, attrs, field, onInput } =
                 []
 
         dataEmptyAttrs =
-            if Field.isEmpty field then
+            if F.isEmpty field then
                 [ HA.attribute "data-empty" ""
                 ]
 
@@ -79,20 +79,20 @@ view { tipe, isRequired, isDisabled, attrs, field, onInput } =
                 []
 
         otherAttrs =
-            [ HA.value (Field.toString field)
+            [ HA.value (F.toRawString field)
             , if isDisabled then
                 HA.disabled True
 
               else
                 HE.onInput onInput
             , HA.attribute "data-state" <|
-                if Field.isClean field then
+                if F.isClean field then
                     "clean"
 
                 else
                     "dirty"
             , HA.attribute "data-validity" <|
-                if Field.isValid field then
+                if F.isValid field then
                     "valid"
 
                 else

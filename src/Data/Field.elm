@@ -9,49 +9,51 @@ module Data.Field exposing
 
 import Data.Angle as Angle exposing (Angle)
 import Data.Preset as Preset exposing (Preset)
-import Lib.Field as F
+import Field as F exposing (Type)
 
 
-preset : F.Type Preset
+preset : Type Preset
 preset =
-    let
-        toValue s =
-            case Preset.fromId s of
-                Just p ->
-                    Ok p
+    F.customType
+        { fromString =
+            \s ->
+                case Preset.fromId s of
+                    Just p ->
+                        Ok p
 
-                Nothing ->
-                    Ok Preset.default
-    in
-    { toString = .id
-    , toValue = toValue
-    , validate = .id >> toValue
-    }
+                    Nothing ->
+                        Ok Preset.default
+        , toString = .id
+        }
 
 
-angle : F.Type Angle
+angle : Type Angle
 angle =
-    { toString = Angle.toDegrees >> String.fromFloat
-    , toValue = F.trim >> Result.andThen (String.toFloat >> Maybe.map (Ok << Angle.fromDegrees) >> Maybe.withDefault F.validationError)
-    , validate = Ok
-    }
+    let
+        float =
+            F.typeToConverters F.float
+    in
+    F.customType
+        { fromString = float.fromString >> Result.map Angle.fromDegrees
+        , toString = Angle.toDegrees >> float.toString
+        }
 
 
-fps : F.Type Int
+fps : Type Int
 fps =
-    F.boundedInt { min = 1, max = 60 }
+    F.subsetOfInt (\n -> 1 <= n && n <= 60)
 
 
-ipf : F.Type Int
+ipf : Type Int
 ipf =
-    F.boundedInt { min = 1, max = 1000000 }
+    F.subsetOfInt (\n -> 1 <= n && n <= 1000000)
 
 
-panIncrement : F.Type Float
+panIncrement : Type Float
 panIncrement =
-    F.boundedFloat { min = 1, max = 1000000 }
+    F.subsetOfFloat (\f -> 1 <= f && f <= 1000000)
 
 
-zoomIncrement : F.Type Float
+zoomIncrement : Type Float
 zoomIncrement =
-    F.boundedFloat { min = 1, max = 1000 }
+    F.subsetOfFloat (\f -> 1 <= f && f <= 1000)
